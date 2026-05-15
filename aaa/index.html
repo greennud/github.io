@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lead Registration Form</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 100%;
+      }
+      h2 {
+        color: #667eea;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+      .webhook-info {
+        background: #f0f4ff;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 12px;
+      }
+      .webhook-info.error {
+        background: #ffe0e0;
+        color: #c0392b;
+      }
+      .webhook-info.success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .webhook-url {
+        font-family: monospace;
+        word-break: break-all;
+        margin-top: 5px;
+        padding: 5px;
+        background: white;
+        border-radius: 4px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+        font-family: inherit;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      button:hover:not(:disabled) {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .required {
+        color: #e74c3c;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        display: none;
+      }
+      .result.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .result.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 15px;
+      }
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>📋 Lead Registration Form</h2>
+      <p class="subtitle">กรอกข้อมูลเพื่อติดต่อทีมขาย</p>
+
+      <!-- Webhook Status Display -->
+      <div id="webhookStatus" class="webhook-info"></div>
+
+      <form id="leadForm">
+        <div class="form-group">
+          <label>Full name <span class="required">*</span></label>
+          <input
+            type="text"
+            name="fullName"
+            required
+            placeholder="กรอกชื่อ-นามสกุล"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="example@email.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Mobile <span class="required">*</span></label>
+          <input type="tel" name="mobile" required placeholder="08X-XXX-XXXX" />
+        </div>
+
+        <div class="form-group">
+          <label>Company name <span class="required">*</span></label>
+          <input
+            type="text"
+            name="companyName"
+            required
+            placeholder="ชื่อบริษัท"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Interest <span class="required">*</span></label>
+          <select name="interest" required>
+            <option value="">-- เลือกแพ็คเกจ --</option>
+            <option value="Enterprise Solution">Enterprise Solution</option>
+            <option value="SME Package">SME Package</option>
+            <option value="Startup Plan">Startup Plan</option>
+            <option value="Consultation">Consultation</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Requirement details</label>
+          <textarea
+            name="requirements"
+            placeholder="บอกความต้องการของคุณ (ไม่บังคับ)"
+          ></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">Send Information</button>
+      </form>
+
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Sending...</p>
+      </div>
+
+      <div class="result" id="result"></div>
+    </div>
+
+    <script>
+      // 🎯 อ่าน Webhook URL จาก Query String
+      function getWebhookUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('webhook');
+      }
+
+      // Get webhook URL
+      const WEBHOOK_URL = getWebhookUrl();
+      const webhookStatus = document.getElementById('webhookStatus');
+      const submitBtn = document.getElementById('submitBtn');
+
+      // แสดงสถานะ Webhook URL
+      if (WEBHOOK_URL) {
+        webhookStatus.className = 'webhook-info success';
+        webhookStatus.innerHTML = `
+                <strong>✅ Webhook Connected</strong>
+                <div class="webhook-url">${WEBHOOK_URL}</div>
+            `;
+      } else {
+        webhookStatus.className = 'webhook-info error';
+        webhookStatus.innerHTML = `
+                <strong>⚠️ No Webhook URL</strong><br>
+                Please add ?webhook=YOUR_URL to the page URL<br>
+                <small>Example: lead-form.html?webhook=https://your-n8n.com/webhook/...</small>
+            `;
+        submitBtn.disabled = true;
+      }
+
+      // Form submission
+      document
+        .getElementById('leadForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          if (!WEBHOOK_URL) {
+            alert(
+              '⚠️ Please add webhook URL to the page URL\n\nExample: lead-form.html?webhook=https://...'
+            );
+            return;
+          }
+
+          // Show loading
+          document.querySelector('.loading').style.display = 'block';
+          document.getElementById('result').style.display = 'none';
+          submitBtn.disabled = true;
+
+          // Get form data
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData);
+
+          try {
+            // Send to n8n webhook
+            const response = await fetch(WEBHOOK_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            // Hide loading
+            document.querySelector('.loading').style.display = 'none';
+            submitBtn.disabled = false;
+
+            // Show success message
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result success';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                    <strong>✅ Success!</strong><br>
+                    ${result.message || 'Thank you! We will contact you soon.'}
+                `;
+
+            // Reset form
+            e.target.reset();
+          } catch (error) {
+            // Hide loading
+            document.querySelector('.loading').style.display = 'none';
+            submitBtn.disabled = false;
+
+            // Show error
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result error';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                    <strong>❌ Error!</strong><br>
+                    Could not send your information. Please try again.<br>
+                    <small>Error: ${error.message}</small>
+                `;
+          }
+        });
+    </script>
+  </body>
+</html>
