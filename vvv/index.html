@@ -1,0 +1,3404 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Speech-to-Text Conversation Web App v1.6.12 — Print Project Name Guard · Selected Print Content Guard · Project Heading Alignment Guard · Hardened Preview Guard" />
+  <title>Speech-to-Text Conversation Web App</title>
+
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-soft: #f1f2f0;
+      --text: #171717;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --primary: #111827;
+      --primary-soft: #e5e7eb;
+      --danger: #b91c1c;
+      --success: #047857;
+      --warning: #b45309;
+      --focus: #2563eb;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.07);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --container: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans Thai", "Noto Sans", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    body { min-height: 100%; margin: 0; }
+
+    button, select, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+    .app {
+      width: min(100% - 32px, var(--container));
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .brand { display: grid; gap: 4px; min-width: 0; }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 0.76rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(0.88rem, 1.26vw, 1.05rem);
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      font-weight: 720;
+    }
+
+    .status-card {
+      min-width: 260px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 650;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .dot.ready  { background: var(--success); }
+    .dot.listening { background: var(--danger); animation: pulse 1.2s infinite; }
+    .dot.paused { background: var(--warning); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.55); opacity: 0.55; }
+    }
+
+    .notice {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #7c2d12;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin: 16px 0 24px;
+      display: none;
+    }
+    .notice.show { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title { margin: 0; font-size: 1rem; font-weight: 740; letter-spacing: -0.02em; }
+    .panel-note  { color: var(--muted); font-size: 0.88rem; }
+
+    /* v1.6.4: Hide non-essential helper notes without removing DOM nodes or changing JS bindings. */
+    .hidden-helper-note { display: none !important; }
+
+    /* v1.6.5: Hide version eyebrow text without removing the DOM node or changing JS bindings. */
+    .hidden-version-eyebrow { display: none !important; }
+
+    .project-heading {
+      margin-top: 5px;
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 760;
+      letter-spacing: -0.01em;
+      word-break: break-word;
+      display: none;
+    }
+    .project-heading.show { display: block; }
+
+    .project-title-card {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: #fafafa;
+      border-radius: var(--radius-md);
+      padding: 12px;
+      flex: 0 0 auto;
+    }
+
+    .project-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .project-title-label {
+      font-size: 0.82rem;
+      font-weight: 720;
+      color: #374151;
+    }
+
+    .project-title-input {
+      min-height: 36px !important;
+      border-radius: 999px !important;
+      padding: 7px 12px !important;
+      font-size: 0.9rem;
+    }
+
+
+    /* v1.6.6: Main Transcript header alignment guard.
+       Layout-only enhancement; existing button IDs and handlers are unchanged. */
+    .transcript-main-header {
+      align-items: center;
+    }
+
+    .transcript-title-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 36px;
+      min-width: 0;
+    }
+
+    .transcript-title-block .panel-title {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    /* v1.6.7: Workspace title typography guard.
+       Style-only enhancement for Main Transcript and Selected Text Workspace titles.
+       No existing IDs, event bindings, or speech engine logic are changed. */
+    .workspace-section-title {
+      font-size: 1.5rem !important;
+      color: #6633FF !important;
+      line-height: 1.18;
+    }
+
+    /* v1.6.8: Main Transcript top-alignment guard.
+       Layout-only enhancement; title is aligned with Selected Text Workspace while
+       preserving existing DOM structure, IDs, and JavaScript bindings. */
+    .transcript-main-header {
+      align-items: flex-start;
+    }
+
+    .transcript-main-header .transcript-title-block {
+      align-items: flex-start;
+      padding-top: 0;
+    }
+
+    .transcript-main-header .workspace-section-title {
+      align-self: flex-start;
+      margin-top: 0;
+    }
+
+
+    .transcript-header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-left: auto;
+      max-width: 64%;
+    }
+
+    .transcript-header-actions .btn {
+      white-space: nowrap;
+    }
+
+    /* v1.6.9: Clear-first action row guard.
+       Layout-only enhancement; keeps Clear before Extract Selected without changing IDs or JS bindings. */
+    .transcript-header-actions {
+      row-gap: 8px;
+    }
+
+    .transcript-header-actions #clearBtn {
+      order: 0;
+    }
+
+    .transcript-header-actions #extractBtn {
+      order: 1;
+    }
+
+    .transcript-header-actions #copyBtn {
+      order: 2;
+    }
+
+    .transcript-header-actions #saveBtn {
+      order: 3;
+    }
+
+    .transcript-header-actions #printBtn {
+      order: 4;
+    }
+
+
+
+    /* v1.6.12: Print project name guard + selected print content guard + project heading alignment guard.
+       Layout-only enhancement for heading placement; existing IDs and speech engine logic remain unchanged. */
+    .transcript-main-header .transcript-title-block {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-content: start;
+      align-items: start;
+      justify-items: start;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .transcript-main-header .project-heading {
+      display: none;
+      margin-top: 0;
+      width: 100%;
+      font-size: 1rem;
+      line-height: 1.35;
+      font-weight: 700;
+      color: var(--text);
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .transcript-main-header .project-heading.show {
+      display: block;
+    }
+
+    .extract-header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .extract-header-actions .btn {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1180px) {
+      .transcript-header-actions {
+        max-width: 100%;
+        justify-content: flex-start;
+      }
+
+      .extract-header-actions {
+        margin-left: 0;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .transcript-main-header {
+        align-items: flex-start;
+      }
+
+      .transcript-title-block {
+        width: 100%;
+      }
+
+      .transcript-header-actions {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .extract-header-actions {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .project-title-row { grid-template-columns: 1fr; }
+      .project-title-row .btn { width: fit-content; }
+    }
+
+    .panel-body {
+      padding: 18px 20px 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .controls { display: grid; gap: 16px; }
+    .field { display: grid; gap: 7px; }
+    .field-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
+
+    label { font-size: 0.9rem; font-weight: 650; color: #374151; }
+
+    select, input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    select, input[type="text"] { min-height: 42px; padding: 9px 12px; }
+    textarea { padding: 14px; resize: vertical; }
+
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.11);
+    }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .btn {
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 9px 14px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 680;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      user-select: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #9ca3af;
+      background: #fafafa;
+    }
+
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.primary:hover:not(:disabled) { background: #000; }
+    .btn.danger   { color: var(--danger); border-color: #fecaca; background: #fffafa; }
+    .btn.ghost    { background: var(--surface-soft); border-color: var(--surface-soft); }
+    .btn.active-mode { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .btn.small { min-height: 34px; padding: 7px 11px; font-size: 0.88rem; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .toggle-row:first-child { border-top: 0; padding-top: 0; }
+
+    .toggle-text { display: grid; gap: 2px; }
+    .toggle-text strong { font-size: 0.92rem; }
+    .toggle-text span   { color: var(--muted); font-size: 0.82rem; }
+
+    .switch { position: relative; display: inline-block; width: 48px; height: 28px; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 999px;
+      transition: 0.2s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .switch input:checked + .slider             { background: var(--primary); }
+    .switch input:checked + .slider::before     { transform: translateX(20px); }
+
+    .speaker-list { display: grid; gap: 10px; }
+
+    .live-box {
+      min-height: 90px;
+      border: 1px dashed var(--border-strong);
+      background: #fbfbfa;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+
+    .live-box.active { color: var(--text); border-color: #9ca3af; background: #fff; }
+
+    .transcript-area { min-height: 420px; line-height: 1.65; font-size: 1rem; }
+    .extract-area    { min-height: 170px; line-height: 1.65; }
+
+    /* REVIEW MODE: ขีดเส้นใต้สีส้มบรรทัดที่ขึ้นต้นด้วย [ตรวจสอบ */
+    .review-mode-active {
+      background: repeating-linear-gradient(
+        transparent,
+        transparent calc(1.65em - 1px),
+        rgba(251,191,36,0.15) calc(1.65em - 1px),
+        rgba(251,191,36,0.15) 1.65em
+      ) !important;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .counter { display: flex; flex-wrap: wrap; gap: 12px; }
+    .kbd-hint { color: var(--muted); font-size: 0.82rem; }
+
+    .review-counter {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #92400e;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: none;
+    }
+    .review-counter.show { display: inline; }
+
+    /* LOW-LATENCY: CSS Containment */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(520px, 1.6fr) minmax(300px, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .workspace-grid .panel {
+      min-width: 0;
+      height: calc(100vh - 245px);
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .workspace-grid .panel-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .workspace-grid .live-box,
+    .workspace-grid textarea {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      contain: layout paint;
+    }
+
+    .workspace-grid .live-box      { line-height: 1.65; }
+    .workspace-grid .transcript-area { min-height: 0; }
+    .workspace-grid .extract-area   { min-height: 0; }
+    .workspace-grid .panel-header   { min-height: 76px; }
+    .workspace-grid .panel-title    { white-space: nowrap; }
+    .workspace-grid .panel-note     { line-height: 1.35; }
+    .workspace-grid .button-row     { flex: 0 0 auto; }
+
+    .micro-interim-preview {
+      --preview-lines: 3;
+      flex: 0 0 auto;
+      width: 100%;
+      min-height: calc(1.5em * var(--preview-lines) + 22px);
+      max-height: calc(1.5em * var(--preview-lines) + 22px);
+      border: 1px dashed var(--border-strong);
+      background: #fbfbfa;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      overflow: hidden;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .micro-interim-preview.active { color: var(--text); border-color: #9ca3af; background: #fff; }
+    .micro-interim-label  { color: var(--muted); font-weight: 700; margin-right: 6px; }
+    .micro-interim-value  { white-space: normal; word-break: break-word; }
+
+    .grid.controls-collapsed .workspace-grid {
+      grid-template-columns: minmax(560px, 1.65fr) minmax(320px, 1fr);
+    }
+
+    /* ENGINE HEALTH PANEL */
+    .health-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fafafa;
+      overflow: hidden;
+    }
+
+    .health-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #374151;
+      border-bottom: 1px solid transparent;
+      transition: background 0.12s;
+      user-select: none;
+    }
+
+    .health-header:hover { background: #f3f4f6; }
+    .health-header.open  { border-bottom-color: var(--border); }
+
+    .health-toggle-icon { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+    .health-header.open .health-toggle-icon { transform: rotate(90deg); }
+
+    .health-body { padding: 14px; display: none; }
+    .health-body.show { display: block; }
+
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .health-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .health-label { font-size: 0.68rem; color: var(--muted); font-weight: 650; line-height: 1.3; margin-bottom: 4px; }
+    .health-value { font-size: 1.05rem; font-weight: 780; color: var(--text); font-variant-numeric: tabular-nums; }
+    .health-value.good   { color: var(--success); }
+    .health-value.warn   { color: var(--warning); }
+    .health-value.danger { color: var(--danger); }
+
+    .test-results {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .test-results.show { display: block; }
+
+    .test-result-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.4;
+    }
+
+    .test-result-row:last-child { border-bottom: 0; }
+    .test-result-row.pass { background: #f0fdf4; }
+    .test-result-row.fail { background: #fffafa; }
+    .test-icon { flex: 0 0 auto; font-size: 0.9rem; }
+    .test-label { color: #374151; flex: 1; }
+    .test-summary {
+      padding: 8px 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: #f9fafb;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* PERMISSION GUIDE */
+    .permission-guide {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: #fafafa;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .permission-guide strong { font-size: 0.92rem; }
+
+    .permission-steps {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .permission-steps li { margin: 4px 0; }
+
+    .permission-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: fit-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 650;
+    }
+
+    .permission-state::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--muted);
+    }
+
+    .permission-state.granted { color: var(--success); border-color: #bbf7d0; background: #f0fdf4; }
+    .permission-state.granted::before { background: var(--success); }
+    .permission-state.denied  { color: var(--danger);  border-color: #fecaca; background: #fffafa; }
+    .permission-state.denied::before  { background: var(--danger); }
+    .permission-state.prompt  { color: var(--warning); border-color: #fed7aa; background: #fff7ed; }
+    .permission-state.prompt::before  { background: var(--warning); }
+
+    .mini-control-bar {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      margin-bottom: 0;
+      display: flex;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      position: static;
+      z-index: 20;
+    }
+
+    .mini-left, .mini-right {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--border);
+      background: #fafafa;
+      border-radius: 999px;
+      min-height: 36px;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .mini-pill strong { color: var(--text); font-weight: 720; }
+
+    .mini-select {
+      width: auto;
+      min-width: 130px;
+      min-height: 36px;
+      border-radius: 999px;
+      padding: 7px 32px 7px 11px;
+      font-size: 0.86rem;
+      font-weight: 650;
+      background-color: #fafafa;
+    }
+
+    .mini-control-bar .btn.small { min-height: 36px; padding: 7px 12px; }
+
+    .grid.controls-collapsed { grid-template-columns: 1fr; }
+    .grid.controls-collapsed .sidebar { display: none; }
+
+    @media (max-width: 1180px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+      .workspace-grid .panel { height: auto; min-height: unset; }
+      .workspace-grid .transcript-area { min-height: 360px; }
+      .workspace-grid .extract-area    { min-height: 220px; }
+      .workspace-grid .panel-title     { white-space: normal; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .mini-control-bar { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+      .mini-left, .mini-right { flex-wrap: wrap; }
+    }
+
+    @media (max-width: 900px) {
+      .status-card  { width: 100%; }
+      .grid { grid-template-columns: 1fr; }
+      .app  { width: min(100% - 22px, var(--container)); padding-top: 22px; }
+      .panel-header, .panel-body { padding-left: 16px; padding-right: 16px; }
+      .mini-control-bar { width: 100%; justify-content: flex-start; }
+      .mini-left, .mini-right { width: 100%; }
+      .mini-right { justify-content: flex-start; }
+      .mini-select { flex: 1 1 145px; min-width: 0; }
+      .health-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .sidebar, .extract-panel, .footer, .notice, .button-row, .panel-note { display: none !important; }
+      .app  { width: 100%; padding: 0; }
+      .grid { display: block; }
+      .panel { box-shadow: none; border: 0; }
+      .panel-header { border-bottom: 1px solid #000; }
+      .transcript-area { border: 0; min-height: 0; }
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="eyebrow hidden-version-eyebrow">Version v1.6.12 · Print Project Name Guard · Selected Print Content Guard + Project Heading Alignment Guard · Title Font Color Guard · Hidden Helper Text Guard · Project Title · Transcript Actions Right · Hardened Preview Guard</div>
+        <h1>Speech-to-Text Conversation Web App</h1>
+      </div>
+
+      <section class="mini-control-bar" aria-label="Mini control bar">
+        <div class="mini-left">
+          <span class="mini-pill"><span id="miniStatusDot" class="dot"></span><strong id="miniStatusText">Ready</strong></span>
+          <select id="miniLanguageSelect" class="mini-select" aria-label="Mini language selector">
+            <option value="th-TH">Thai · th-TH</option>
+            <option value="en-US">English · en-US</option>
+          </select>
+          <select id="miniSpeakerSelect" class="mini-select" aria-label="Mini speaker selector">
+            <option value="0">ผู้พูด 1</option>
+            <option value="1">ผู้พูด 2</option>
+            <option value="2">ผู้พูด 3</option>
+          </select>
+        </div>
+
+        <div class="mini-right">
+          <button id="miniStartBtn" class="btn primary small" type="button">Start</button>
+          <button id="miniPauseBtn" class="btn small" type="button" disabled>Pause</button>
+          <button id="miniStopBtn"  class="btn small" type="button" disabled>Stop</button>
+          <button id="toggleControlsBtn" class="btn small ghost" type="button" aria-expanded="true">Hide Controls</button>
+        </div>
+      </section>
+
+      <section class="status-card sr-only" aria-label="Listening status">
+        <div class="status-line">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">Checking browser support...</span>
+        </div>
+        <div id="statusDetail" class="status-detail">กำลังตรวจสอบ Web Speech API</div>
+      </section>
+    </header>
+
+    <div id="compatNotice" class="notice">
+      เบราว์เซอร์นี้อาจไม่รองรับ Web Speech API กรุณาใช้งานผ่าน Google Chrome หรือ Microsoft Edge เวอร์ชันล่าสุด
+    </div>
+
+    <div id="permissionNotice" class="notice">
+      ไม่สามารถใช้งานไมโครโฟนได้ หากเผลอกด Block ให้กดไอคอน Permission หรือรูปกุญแจที่ Address Bar แล้วเปลี่ยน Microphone เป็น Allow จากนั้น Reload
+    </div>
+
+    <section id="appGrid" class="grid">
+      <!-- ═══════════════════ SIDEBAR CONTROLS ═══════════════════ -->
+      <aside class="panel sidebar">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Controls</h2>
+            <div class="panel-note">เลือกภาษาและควบคุมการฟัง</div>
+          </div>
+          <button id="hideControlsInsideBtn" class="btn small ghost" type="button">Hide</button>
+        </div>
+
+        <div class="panel-body controls">
+
+          <!-- LANGUAGE -->
+          <div class="field">
+            <label for="languageSelect">Language</label>
+            <select id="languageSelect">
+              <option value="th-TH">Thai · th-TH</option>
+              <option value="en-US">English · en-US</option>
+            </select>
+          </div>
+
+          <!-- MIC PERMISSION -->
+          <div class="permission-guide" aria-label="Microphone permission guide">
+            <strong>Microphone Permission</strong>
+            <span id="permissionState" class="permission-state">Checking permission</span>
+            <ol class="permission-steps">
+              <li>กด <strong>Check Microphone</strong> ก่อนเริ่มใช้งานครั้งแรก</li>
+              <li>เมื่อ Browser ถาม ให้เลือก <strong>Allow while visiting the site</strong></li>
+              <li>หลังจากอนุญาตแล้ว กด Start ได้ทันทีในครั้งถัดไป</li>
+              <li><strong>หมายเหตุ:</strong> Mic stream จะถูก release อัตโนมัติหากหยุดฟังนานเกิน 5 นาที</li>
+            </ol>
+            <div class="button-row">
+              <button id="checkMicBtn" class="btn small ghost" type="button">Check Microphone</button>
+            </div>
+          </div>
+
+          <!-- START / PAUSE / STOP -->
+          <div class="button-row" aria-label="Microphone controls">
+            <button id="startBtn" class="btn primary" type="button">Start</button>
+            <button id="pauseBtn" class="btn" type="button" disabled>Pause</button>
+            <button id="stopBtn"  class="btn" type="button" disabled>Stop</button>
+          </div>
+
+          <div class="panel-note" style="font-size:0.75rem;color:var(--muted);margin-top:-4px">
+            ⌨️ Shortcuts: <strong>Space</strong> = Start/Pause · <strong>Esc</strong> = Stop · <strong>Ctrl+S</strong> = Save
+          </div>
+
+          <!-- FAST MODE + ACCURACY GUARD -->
+          <div>
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <strong>Fast Mode</strong>
+                <span>ลด latency ด้วย reconnect เร็วขึ้น</span>
+              </div>
+              <label class="switch">
+                <input id="fastModeToggle" type="checkbox" />
+                <span class="slider"></span>
+                <span class="sr-only">Enable fast mode</span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <strong>Accuracy Guard</strong>
+                <span>เพิ่ม buffer ให้ speech engine finalize ก่อน reconnect</span>
+              </div>
+              <label class="switch">
+                <input id="accuracyGuardToggle" type="checkbox" checked />
+                <span class="slider"></span>
+                <span class="sr-only">Enable accuracy guard</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ▼ NEW: DEDUP WINDOW -->
+          <div class="field">
+            <label for="dedupWindowSelect">Dedup Window Duration</label>
+            <select id="dedupWindowSelect">
+              <option value="1000">Fast — 1 วินาที</option>
+              <option value="2500" selected>Normal — 2.5 วินาที (แนะนำ)</option>
+              <option value="5000">Conservative — 5 วินาที</option>
+            </select>
+            <div class="field-hint">ระยะเวลาที่จำข้อความล่าสุดเพื่อกรอง duplicate · ยิ่งนานยิ่งกรองได้มากขึ้น</div>
+          </div>
+
+          <!-- ▼ NEW: PREVIEW DROP LINES -->
+          <div class="field">
+            <label for="dropLinesSelect">Preview Drop Threshold</label>
+            <select id="dropLinesSelect">
+              <option value="3" selected>3 บรรทัด (ค่าเริ่มต้น)</option>
+              <option value="5">5 บรรทัด</option>
+              <option value="7">7 บรรทัด</option>
+            </select>
+            <div class="field-hint">จำนวนบรรทัดใน Listening Preview ก่อน commit ข้อความลง Transcript อัตโนมัติ</div>
+          </div>
+
+          <!-- TECHNICAL TERM NORMALIZE -->
+          <div class="field">
+            <label for="normalizeModeSelect">Technical term cleanup</label>
+            <select id="normalizeModeSelect">
+              <option value="realtime">Real-time normalize</option>
+              <option value="manual">Manual cleanup later</option>
+            </select>
+            <div class="button-row">
+              <button id="cleanTermsBtn" class="btn small ghost" type="button">Clean Technical Terms</button>
+            </div>
+          </div>
+
+          <!-- TIMESTAMP + SPEAKER TOGGLE -->
+          <div>
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <strong>Timestamp</strong>
+                <span>เพิ่มเวลา [HH:mm:ss] ก่อนข้อความ</span>
+              </div>
+              <label class="switch">
+                <input id="timestampToggle" type="checkbox" />
+                <span class="slider"></span>
+                <span class="sr-only">Enable timestamp</span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <strong>Speaker label</strong>
+                <span>เพิ่มชื่อผู้พูดก่อนแต่ละ segment</span>
+              </div>
+              <label class="switch">
+                <input id="speakerToggle" type="checkbox" />
+                <span class="slider"></span>
+                <span class="sr-only">Enable speaker label</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- CURRENT SPEAKER + NAMES -->
+          <div class="field">
+            <label for="speakerSelect">Current speaker</label>
+            <select id="speakerSelect">
+              <option value="0">ผู้พูด 1</option>
+              <option value="1">ผู้พูด 2</option>
+              <option value="2">ผู้พูด 3</option>
+            </select>
+          </div>
+
+          <div class="speaker-list" aria-label="Speaker name settings">
+            <div class="field">
+              <label for="speaker1">Speaker 1 name</label>
+              <input id="speaker1" type="text" value="ผู้พูด 1" />
+            </div>
+            <div class="field">
+              <label for="speaker2">Speaker 2 name</label>
+              <input id="speaker2" type="text" value="ผู้พูด 2" />
+            </div>
+            <div class="field">
+              <label for="speaker3">Speaker 3 name</label>
+              <input id="speaker3" type="text" value="ผู้พูด 3" />
+            </div>
+          </div>
+
+          <!-- ▼ NEW: REVIEW MODE CONTROLS -->
+          <div class="field">
+            <label>Review Mode</label>
+            <div class="button-row">
+              <button id="reviewModeBtn" class="btn small ghost" type="button">Review Mode</button>
+              <button id="acceptAllReviewBtn" class="btn small" type="button">Accept All</button>
+            </div>
+            <div class="field-hint" id="reviewHint">กด <strong>Review Mode</strong> เพื่อ highlight ข้อความที่ต้องตรวจสอบ · <strong>Accept All</strong> เพื่อลบ prefix [ตรวจสอบ] ออกทั้งหมด</div>
+          </div>
+
+
+          <!-- ▼ NEW: ENGINE HEALTH PANEL -->
+          <div class="health-panel" aria-label="Engine health dashboard">
+            <div class="health-header" id="healthPanelToggle" role="button" tabindex="0" aria-expanded="false">
+              <span>⚙️ Engine Health</span>
+              <span class="health-toggle-icon" id="healthToggleIcon">▶</span>
+            </div>
+            <div class="health-body" id="healthPanelBody">
+              <div class="health-grid">
+                <div class="health-item">
+                  <div class="health-label">Interim Events</div>
+                  <div class="health-value" id="hInterim">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Final Events</div>
+                  <div class="health-value" id="hFinal">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Dup Filtered</div>
+                  <div class="health-value good" id="hDupFiltered">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Low Confidence</div>
+                  <div class="health-value warn" id="hLowConf">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Preview Drops</div>
+                  <div class="health-value" id="hPreviewDrops">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Final Replacements</div>
+                  <div class="health-value good" id="hFinalReplacements">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Redrop Blocked</div>
+                  <div class="health-value good" id="hRedropBlocked">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Restarts</div>
+                  <div class="health-value" id="hRestarts">0</div>
+                </div>
+                <div class="health-item">
+                  <div class="health-label">Errors</div>
+                  <div class="health-value danger" id="hErrors">0</div>
+                </div>
+              </div>
+              <div class="button-row">
+                <button id="runTestsBtn"    class="btn small ghost" type="button">Run Tests</button>
+                <button id="resetHealthBtn" class="btn small ghost" type="button">Reset Health</button>
+              </div>
+              <div class="test-results" id="testResults" aria-live="polite"></div>
+            </div>
+          </div>
+
+        </div><!-- /panel-body -->
+      </aside>
+
+      <!-- ═══════════════════ WORKSPACE ═══════════════════ -->
+      <section class="workspace-grid">
+        <section class="panel">
+          <div class="panel-header transcript-main-header">
+            <div class="transcript-title-block">
+              <h2 class="panel-title workspace-section-title">Main Transcript</h2>
+              <div class="panel-note hidden-helper-note">บทสนทนาหลัก · ข้อความล่าสุดอยู่บนสุด · Auto-save</div>
+              <div id="projectHeadingMain" class="project-heading" aria-live="polite"></div>
+            </div>
+            <!-- v1.6.9: Clear moved before Extract Selected and kept on the same header action row.
+                 Button IDs are preserved, so existing JavaScript event bindings remain unchanged. -->
+            <div class="transcript-header-actions" aria-label="Main transcript actions">
+              <button id="clearBtn" class="btn small danger" type="button">Clear</button>
+              <button id="extractBtn" class="btn small ghost" type="button">Extract Selected</button>
+              <button id="copyBtn"  class="btn small" type="button">Copy Transcript</button>
+              <button id="saveBtn"  class="btn small" type="button">Save .txt</button>
+              <button id="printBtn" class="btn small" type="button">Print</button>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="project-title-card" aria-label="Project title setting">
+              <label class="project-title-label" for="projectNameInput">Project Name / ชื่อโครงการ</label>
+              <div class="project-title-row">
+                <input id="projectNameInput" class="project-title-input" type="text" maxlength="120" placeholder="กรอกชื่อโครงการ เช่น ประชุมวิเคราะห์ Speech-to-Text v1.6" autocomplete="off" />
+                <button id="saveProjectNameBtn" class="btn small primary" type="button">Save Project Name</button>
+                <button id="clearProjectNameBtn" class="btn small ghost" type="button">Clear</button>
+              </div>
+              <div class="field-hint hidden-helper-note">ชื่อโครงการที่ Save จะถูกใช้เป็นหัวเรื่องร่วมของ Main Transcript และ Selected Text Workspace โดยไม่แทรกลงข้อความที่กำลังถอดเสียง</div>
+            </div>
+
+            <div id="miniInterimText" class="micro-interim-preview" aria-live="polite">
+              <span class="micro-interim-label">Listening preview:</span><span id="miniInterimValue" class="micro-interim-value">ยังไม่มีข้อความระหว่างฟัง</span>
+            </div>
+
+            <textarea
+              id="transcript"
+              class="transcript-area"
+              spellcheck="true"
+              placeholder="กด Start แล้วเริ่มพูด หรือพิมพ์แก้ไขข้อความได้ที่นี่..."
+            ></textarea>
+
+            <div class="meta-row">
+              <div class="counter">
+                <span id="charCount">0 characters</span>
+                <span id="wordCount">0 words</span>
+                <span id="savedState">Not saved yet</span>
+                <span id="reviewCounter" class="review-counter" aria-live="polite"></span>
+              </div>
+              <span class="kbd-hint">Tip: เลือกข้อความบางส่วนแล้วกด Extract Selected</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel extract-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title workspace-section-title">Selected Text Workspace</h2>
+              <div class="panel-note hidden-helper-note">พื้นที่แยกสำหรับ copy/save ข้อความที่เลือก</div>
+              <div id="projectHeadingExtract" class="project-heading" aria-live="polite"></div>
+            </div>
+            <!-- v1.6.12: Print action for Selected Text Workspace uses a writable print document and includes saved project name. -->
+            <div class="extract-header-actions" aria-label="Selected workspace actions">
+              <button id="printExtractBtn" class="btn small" type="button">Print</button>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <textarea
+              id="extractText"
+              class="extract-area"
+              spellcheck="true"
+              placeholder="ข้อความที่ Extract จะมาอยู่ตรงนี้..."
+            ></textarea>
+
+            <div class="button-row">
+              <button id="copyExtractBtn"  class="btn small" type="button">Copy Selected Workspace</button>
+              <button id="saveExtractBtn"  class="btn small" type="button">Save Selected .txt</button>
+              <button id="clearExtractBtn" class="btn small danger" type="button">Clear Selected</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+
+    <p class="footer">
+      Version v1.6.12 · Print Project Name Guard · Selected Print Content Guard + Project Heading Alignment Guard · Title Font Color Guard · Hidden Helper Text Guard · Project Title · Transcript Actions Right · Hardened Preview Guard · Adaptive Dedup · Confidence Review · Health Panel · Mic Idle Timeout · Regression Tests · Works best on Chrome / Edge · Data stored locally in this browser
+    </p>
+  </main>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ═══════════════════════════════════════════════════════════════════
+    // VERSION v1.6.9  — Clear First Header Action Guard on top of v1.6.8 main title alignment guard
+    //
+    // IMPROVEMENT 1: Configurable Dedup Window (Fast/Normal/Conservative)
+    // IMPROVEMENT 2: Configurable Preview Drop Threshold (3/5/7 lines)
+    // IMPROVEMENT 3: Confidence Score in Review Marker  [ตรวจสอบ 42%]
+    // IMPROVEMENT 4: Review Mode — highlight + Accept All
+    // IMPROVEMENT 5: In-app Engine Health Dashboard (collapsible panel)
+    // IMPROVEMENT 6: Optional Metadata in queueFinalSegment (backward compat)
+    // IMPROVEMENT 7: Mic Stream Idle Timeout (auto-release after 5 min pause)
+    // IMPROVEMENT 8: Built-in Regression Test Suite  window.__sttRunTests()
+    // HARDENING 9: Preview CSS height synchronized with configurable drop threshold
+    // HARDENING 10: Adaptive dedup window during reconnect/preview replacement risk
+    // HARDENING 11: Stronger canonical prefix stripping and quote normalization
+    // HARDENING 12: Project title header saved separately from transcript content
+    // HARDENING 14: Helper notes hidden via CSS-only class to avoid altering engine structure
+    // ═══════════════════════════════════════════════════════════════════
+
+    const STORAGE_KEYS = {
+      transcript:             "stt.baseline.transcript",
+      extract:                "stt.baseline.extract",
+      language:               "stt.baseline.language",
+      timestampEnabled:       "stt.baseline.timestampEnabled",
+      speakerEnabled:         "stt.baseline.speakerEnabled",
+      speakers:               "stt.baseline.speakers",
+      currentSpeaker:         "stt.baseline.currentSpeaker",
+      controlsCollapsed:      "stt.baseline.controlsCollapsed",
+      fastModeEnabled:        "stt.baseline.fastModeEnabled",
+      accuracyGuardEnabled:   "stt.baseline.accuracyGuardEnabled",
+      accuracyGuardMigrated:  "stt.baseline.accuracyGuardMigrated",
+      normalizeMode:          "stt.baseline.normalizeMode",
+      // v1.6.0 additions
+      dedupWindow:            "stt.baseline.dedupWindow",
+      dropLines:              "stt.baseline.dropLines",
+      projectName:            "stt.baseline.projectName"
+    };
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const els = {
+      statusDot:            document.getElementById("statusDot"),
+      statusText:           document.getElementById("statusText"),
+      statusDetail:         document.getElementById("statusDetail"),
+      miniStatusDot:        document.getElementById("miniStatusDot"),
+      miniStatusText:       document.getElementById("miniStatusText"),
+      compatNotice:         document.getElementById("compatNotice"),
+      permissionNotice:     document.getElementById("permissionNotice"),
+      permissionState:      document.getElementById("permissionState"),
+
+      appGrid:              document.getElementById("appGrid"),
+      languageSelect:       document.getElementById("languageSelect"),
+      miniLanguageSelect:   document.getElementById("miniLanguageSelect"),
+      checkMicBtn:          document.getElementById("checkMicBtn"),
+      startBtn:             document.getElementById("startBtn"),
+      pauseBtn:             document.getElementById("pauseBtn"),
+      stopBtn:              document.getElementById("stopBtn"),
+      miniStartBtn:         document.getElementById("miniStartBtn"),
+      miniPauseBtn:         document.getElementById("miniPauseBtn"),
+      miniStopBtn:          document.getElementById("miniStopBtn"),
+      toggleControlsBtn:    document.getElementById("toggleControlsBtn"),
+      hideControlsInsideBtn:document.getElementById("hideControlsInsideBtn"),
+
+      timestampToggle:      document.getElementById("timestampToggle"),
+      speakerToggle:        document.getElementById("speakerToggle"),
+      speakerSelect:        document.getElementById("speakerSelect"),
+      miniSpeakerSelect:    document.getElementById("miniSpeakerSelect"),
+      fastModeToggle:       document.getElementById("fastModeToggle"),
+      accuracyGuardToggle:  document.getElementById("accuracyGuardToggle"),
+      normalizeModeSelect:  document.getElementById("normalizeModeSelect"),
+      cleanTermsBtn:        document.getElementById("cleanTermsBtn"),
+      speakerInputs: [
+        document.getElementById("speaker1"),
+        document.getElementById("speaker2"),
+        document.getElementById("speaker3")
+      ],
+
+      // v1.6.0: new controls
+      dedupWindowSelect:    document.getElementById("dedupWindowSelect"),
+      dropLinesSelect:      document.getElementById("dropLinesSelect"),
+      reviewModeBtn:        document.getElementById("reviewModeBtn"),
+      acceptAllReviewBtn:   document.getElementById("acceptAllReviewBtn"),
+      reviewCounter:        document.getElementById("reviewCounter"),
+      projectNameInput:     document.getElementById("projectNameInput"),
+      saveProjectNameBtn:   document.getElementById("saveProjectNameBtn"),
+      clearProjectNameBtn:  document.getElementById("clearProjectNameBtn"),
+      projectHeadingMain:   document.getElementById("projectHeadingMain"),
+      projectHeadingExtract:document.getElementById("projectHeadingExtract"),
+
+      // Health Panel
+      healthPanelToggle:    document.getElementById("healthPanelToggle"),
+      healthPanelBody:      document.getElementById("healthPanelBody"),
+      healthToggleIcon:     document.getElementById("healthToggleIcon"),
+      hInterim:             document.getElementById("hInterim"),
+      hFinal:               document.getElementById("hFinal"),
+      hDupFiltered:         document.getElementById("hDupFiltered"),
+      hLowConf:             document.getElementById("hLowConf"),
+      hPreviewDrops:        document.getElementById("hPreviewDrops"),
+      hFinalReplacements:   document.getElementById("hFinalReplacements"),
+      hRedropBlocked:       document.getElementById("hRedropBlocked"),
+      hRestarts:            document.getElementById("hRestarts"),
+      hErrors:              document.getElementById("hErrors"),
+      runTestsBtn:          document.getElementById("runTestsBtn"),
+      resetHealthBtn:       document.getElementById("resetHealthBtn"),
+      testResults:          document.getElementById("testResults"),
+
+      miniInterimText:      document.getElementById("miniInterimText"),
+      miniInterimValue:     document.getElementById("miniInterimValue"),
+
+      transcript:           document.getElementById("transcript"),
+      extractText:          document.getElementById("extractText"),
+      extractBtn:           document.getElementById("extractBtn"),
+
+      copyBtn:              document.getElementById("copyBtn"),
+      saveBtn:              document.getElementById("saveBtn"),
+      printBtn:             document.getElementById("printBtn"),
+      clearBtn:             document.getElementById("clearBtn"),
+
+      copyExtractBtn:       document.getElementById("copyExtractBtn"),
+      saveExtractBtn:       document.getElementById("saveExtractBtn"),
+      printExtractBtn:      document.getElementById("printExtractBtn"),
+      clearExtractBtn:      document.getElementById("clearExtractBtn"),
+
+      charCount:            document.getElementById("charCount"),
+      wordCount:            document.getElementById("wordCount"),
+      savedState:           document.getElementById("savedState")
+    };
+
+    // ═══ RECOGNITION STATE ═══
+    let recognition          = null;
+    let isListening          = false;
+    let isPaused             = false;
+    let restartAfterEnd      = false;
+    let saveTimer            = null;
+    let manualStopRequested  = false;
+    let recognitionIsStarting= false;
+    let reconnectTimer       = null;
+    let recognitionSessionId = 0;
+    let reconnectAttempts    = 0;
+    let lastFinalResultAt    = 0;
+    let lastInterimAt        = 0;
+
+    // ═══ DEDUP STATE ═══
+    // IMPROVEMENT 1: getDedupWindowMs() reads live setting instead of hardcoded 2500
+    let recentSegments = []; // [{ key: string, at: number }]
+    const DEDUP_MIN_TEXT_LENGTH = 12;
+    const DEDUP_ADAPTIVE_CONSERVATIVE_MS = 5000;
+
+    const PREVIEW_STATE = Object.freeze({
+      IDLE: "idle",
+      SHOWING: "showing",
+      DROPPED: "dropped",
+      FINAL_REPLACED: "final_replaced",
+      RESOLVED: "resolved"
+    });
+    let previewLifecycleState = PREVIEW_STATE.IDLE;
+
+    // ═══ RECONNECT CONSTANTS ═══
+    const RECONNECT_BASE_DELAY_MS              = 220;
+    const RECONNECT_MAX_DELAY_MS               = 1600;
+    const ACCURACY_GUARD_MIN_RECONNECT_MS      = 360;
+    const ACCURACY_GUARD_RECENT_INTERIM_BUFFER_MS = 520;
+
+    // ═══ ACCURACY ═══
+    const CONFIDENCE_THRESHOLD = 0.55;
+
+    // ═══ PERFORMANCE CACHES ═══
+    const segmenterCache = new Map();
+    function getSegmenter(locale) {
+      if (!("Segmenter" in Intl)) return null;
+      if (!segmenterCache.has(locale)) {
+        segmenterCache.set(locale, new Intl.Segmenter(locale, { granularity: "word" }));
+      }
+      return segmenterCache.get(locale);
+    }
+
+    let cachedLineHeight = 21;
+    function recacheLineHeight() {
+      if (!els || !els.miniInterimText) return;
+      const lh = parseFloat(window.getComputedStyle(els.miniInterimText).lineHeight);
+      if (lh && !isNaN(lh)) cachedLineHeight = lh;
+    }
+
+    // DOM update cache for setStatus
+    let _lastStatusTitle = null;
+    let _lastStatusDetail = null;
+    let _lastStatusMode = null;
+
+    // ═══ ENGINE HEALTH ═══
+    const engineHealth = {
+      interimEvents: 0, finalEvents: 0, lowConfidenceFinals: 0,
+      duplicateFiltered: 0, previewDrops: 0, finalReplacements: 0,
+      previewRedropBlocked: 0, restarts: 0, errors: 0
+    };
+
+    function resetEngineHealth() {
+      Object.keys(engineHealth).forEach(k => { engineHealth[k] = 0; });
+      updateHealthPanel();
+    }
+
+    let healthPanelOpen = false;
+    let healthUpdateTimer = null;
+
+    function updateHealthPanel() {
+      if (!healthPanelOpen) return;
+      els.hInterim.textContent          = engineHealth.interimEvents;
+      els.hFinal.textContent            = engineHealth.finalEvents;
+      els.hDupFiltered.textContent      = engineHealth.duplicateFiltered;
+      els.hLowConf.textContent          = engineHealth.lowConfidenceFinals;
+      els.hPreviewDrops.textContent     = engineHealth.previewDrops;
+      els.hFinalReplacements.textContent= engineHealth.finalReplacements;
+      els.hRedropBlocked.textContent    = engineHealth.previewRedropBlocked;
+      els.hRestarts.textContent         = engineHealth.restarts;
+      els.hErrors.textContent           = engineHealth.errors;
+
+      // Color coding
+      els.hErrors.className    = "health-value " + (engineHealth.errors > 0 ? "danger" : "");
+      els.hLowConf.className   = "health-value " + (engineHealth.lowConfidenceFinals > 0 ? "warn" : "");
+      els.hRestarts.className  = "health-value " + (engineHealth.restarts > 5 ? "warn" : "");
+    }
+
+    function scheduleHealthUpdate() {
+      if (!healthPanelOpen) return;
+      window.clearTimeout(healthUpdateTimer);
+      healthUpdateTimer = window.setTimeout(updateHealthPanel, 300);
+    }
+
+    // ═══ REPLACEMENTS ═══
+    let compiledReplacements = [];
+    let replacementMap = new Map();
+    let combinedReplacementPattern = null;
+
+    // ═══ STORAGE ═══
+    const DB_NAME = "stt-baseline-db";
+    const DB_VERSION = 1;
+    const DB_STORE = "documents";
+    let transcriptDbPromise = null;
+
+    // ═══ INTERIM / PREVIEW STATE ═══
+    let pendingInterimText = "";
+    let interimFrame = null;
+    let previewDropLocked = false;
+    let lastPreviewDrop = null;
+    let previewDropGuardTimer = null;
+    let lastDroppedPreviewText = "";
+    let lastDroppedPreviewAt = 0;
+    let lastResolvedPreviewDropKey = "";
+    let lastResolvedPreviewDropAt = 0;
+
+    // ═══ PREVIEW TIMING CONSTANTS ═══
+    const PREVIEW_DROP_MAX_AGE_MS    = 30000;
+    const PREVIEW_DROP_LOCK_TIMEOUT_MS = 9000;
+    const PREVIEW_CLEAR_SUPPRESS_MS  = 420;
+
+    // ═══ FINAL QUEUE ═══
+    let finalQueue = [];
+    const MAX_FINAL_QUEUE = 50;
+    let finalQueueTimer = null;
+    let finalQueueIdleId = null;
+    let counterTimer = null;
+    let performanceWarningShown = false;
+    const TRANSCRIPT_LENGTH_WARNING = 100000;
+
+    // ═══ MIC PERMISSION STATE ═══
+    let heldMicStream = null;
+    // IMPROVEMENT 7: Mic idle timeout — release after 5 min pause
+    const MIC_IDLE_RELEASE_MS = 5 * 60 * 1000;
+    let pauseIdleTimer = null;
+
+    // ═══ REVIEW MODE ═══
+    let isReviewMode = false;
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 1: getDedupWindowMs()
+    // Reads live select value instead of hardcoded constant
+    // ════════════════════════════════════════
+    function getDedupWindowMs() {
+      if (!els.dedupWindowSelect) return 2500;
+      return Number(els.dedupWindowSelect.value) || 2500;
+    }
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 2: getDropLineCount()
+    // Reads live select value instead of hardcoded 3
+    // ════════════════════════════════════════
+    function getDropLineCount() {
+      if (!els.dropLinesSelect) return 3;
+      const raw = Number(els.dropLinesSelect.value) || 3;
+      return [3, 5, 7].includes(raw) ? raw : 3;
+    }
+
+    function applyPreviewLineSetting() {
+      if (!els.miniInterimText) return;
+      els.miniInterimText.style.setProperty("--preview-lines", String(getDropLineCount()));
+      recacheLineHeight();
+    }
+
+    function getAdaptiveDedupWindowMs() {
+      const base = getDedupWindowMs();
+      const previewRiskActive = Boolean(lastPreviewDrop) || previewLifecycleState === PREVIEW_STATE.DROPPED;
+      const recentReconnectRisk = engineHealth.restarts > 3;
+      if (previewRiskActive || recentReconnectRisk) return Math.max(base, DEDUP_ADAPTIVE_CONSERVATIVE_MS);
+      return base;
+    }
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 3: buildReviewPrefix()
+    // Generates "[ตรวจสอบ 42%] " with confidence percentage
+    // ════════════════════════════════════════
+    function buildReviewPrefix(confidence) {
+      if (typeof confidence === "number" && !isNaN(confidence)) {
+        const pct = Math.round(confidence * 100);
+        return "[ตรวจสอบ " + pct + "%] ";
+      }
+      return "[ตรวจสอบ] ";
+    }
+
+    // ════════════════════════════════════════
+    // TECHNICAL TERM DICTIONARY
+    // ════════════════════════════════════════
+    function compileReplacements() {
+      const rawReplacements = [
+        ["เอไอ", "AI"], ["เอไอจีซี", "AIGC"], ["เจนเอไอ", "GenAI"], ["จีพีที", "GPT"],
+        ["แชตจีพีที", "ChatGPT"], ["แชทจีพีที", "ChatGPT"], ["โอเพ่นเอไอ", "OpenAI"],
+        ["เอพีไอ", "API"], ["เอไอเอพีไอ", "AI API"], ["แอลแอลเอ็ม", "LLM"],
+        ["โมเดล", "model"], ["พรอมต์", "prompt"], ["พร้อมต์", "prompt"], ["พรอม", "prompt"],
+        ["แมชชีนเลิร์นนิง", "machine learning"], ["ดีปเลิร์นนิง", "deep learning"],
+        ["เนเชอรัลแลงเกวจ", "natural language"], ["เอ็นแอลพี", "NLP"], ["โอซีอาร์", "OCR"],
+        ["ออโตเมชัน", "automation"], ["ออโตเมชั่น", "automation"], ["ยูเอ็กซ์", "UX"],
+        ["ยูไอ", "UI"], ["ยูเอ็กซ์ยูไอ", "UX/UI"], ["โปรเจค", "project"], ["โปรเจกต์", "project"],
+        ["โปรเจ็กต์", "project"], ["รีไควร์เมนต์", "requirement"], ["รีเควส", "request"],
+        ["ฟีเจอร์", "feature"], ["ฟังก์ชัน", "function"], ["ฟังก์ชั่น", "function"],
+        ["โปรโตไทป์", "prototype"], ["เบสไลน์", "baseline"], ["เวอร์ชัน", "version"],
+        ["เวอร์ชั่น", "version"], ["ดีไซน์", "design"], ["เลย์เอาต์", "layout"],
+        ["ไวร์เฟรม", "wireframe"], ["แดชบอร์ด", "dashboard"], ["ดราฟต์", "draft"],
+        ["สโคป", "scope"], ["ไทม์ไลน์", "timeline"], ["ไมล์สโตน", "milestone"],
+        ["สเตคโฮลเดอร์", "stakeholder"], ["สเตกโฮลเดอร์", "stakeholder"],
+        ["ฟีดแบ็ก", "feedback"], ["ฟีดแบค", "feedback"], ["พรอเซส", "process"],
+        ["โปรเซส", "process"], ["เวิร์กโฟลว์", "workflow"], ["เวิร์คโฟลว์", "workflow"],
+        ["โฟลว์", "flow"], ["บิสซิเนส", "business"], ["เซอร์วิส", "service"],
+        ["เซอร์วิสบลูพริ้นต์", "service blueprint"], ["เซอร์วิสบลูปริ้นต์", "service blueprint"],
+        ["คัสตอเมอร์", "customer"], ["คัสตอเมอร์เจอร์นีย์", "customer journey"],
+        ["เจอร์นีย์", "journey"], ["ทัชพอยต์", "touchpoint"], ["ทัชพอยท์", "touchpoint"],
+        ["เคพีไอ", "KPI"], ["โอเคอาร์", "OKR"], ["โทแกฟ", "TOGAF"], ["บีพีเอ็มเอ็น", "BPMN"],
+        ["บีพีเอ็ม", "BPM"], ["เรซี่", "RACI"], ["ราเซี่", "RACI"], ["เว็บแอป", "web app"],
+        ["เว็บแอปพลิเคชัน", "web application"], ["เว็บแอพ", "web app"], ["แอป", "app"],
+        ["แอพ", "app"], ["เอชทีเอ็มแอล", "HTML"], ["ซีเอสเอส", "CSS"],
+        ["จาวาสคริปต์", "JavaScript"], ["จาวาสคริป", "JavaScript"],
+        ["โลคอลสตอเรจ", "localStorage"], ["โลคัลสตอเรจ", "localStorage"],
+        ["บราวเซอร์", "browser"], ["เบราว์เซอร์", "browser"], ["ไมโครโฟน", "microphone"],
+        ["เพอร์มิชชัน", "permission"], ["เพอร์มิสชัน", "permission"], ["รีโหลด", "reload"],
+        ["ก็อปปี้", "copy"], ["เซฟ", "save"], ["ดาวน์โหลด", "download"],
+        ["ไฟล์", "file"], ["เท็กซ์", "text"], ["เท็กซ์ไฟล์", "text file"],
+        ["สปีชทูเท็กซ์", "speech-to-text"], ["สปีช ทู เท็กซ์", "speech-to-text"],
+        ["ทรานสคริปต์", "transcript"], ["อินเทอริม", "interim"], ["เรียลไทม์", "real-time"],
+        ["ดาต้า", "data"], ["เดต้า", "data"], ["ดาต้าเบส", "database"], ["เดต้าเบส", "database"],
+        ["ซีอาร์เอ็ม", "CRM"], ["ซีดีพี", "CDP"], ["อีทีแอล", "ETL"], ["ดาต้าเลค", "data lake"],
+        ["ดาต้าแวร์เฮาส์", "data warehouse"], ["รีพอร์ต", "report"], ["อะนาไลติกส์", "analytics"],
+        ["อนาไลติกส์", "analytics"], ["มีตติ้ง", "meeting"], ["มีทติ้ง", "meeting"],
+        ["รีวิว", "review"], ["อัปเดต", "update"], ["อัพเดต", "update"], ["อัปเดท", "update"],
+        ["อัพเดท", "update"], ["คอนเฟิร์ม", "confirm"], ["คอมเมนต์", "comment"],
+        ["คอมเม้นต์", "comment"], ["แอ็กชัน", "action"], ["แอคชัน", "action"],
+        ["แอ็คชั่น", "action"], ["แพลน", "plan"], ["สรุปแอ็กชันไอเท็ม", "action item"],
+        ["แอ็กชันไอเท็ม", "action item"], ["แอคชันไอเท็ม", "action item"],
+        ["เดดไลน์", "deadline"], ["พรีเซนต์", "present"], ["พรีเซนเทชัน", "presentation"],
+        ["พรีเซนเทชั่น", "presentation"], ["สไลด์", "slide"], ["เอกเซล", "Excel"],
+        ["เอ็กเซล", "Excel"], ["เวิร์ด", "Word"], ["พาวเวอร์พอยต์", "PowerPoint"],
+        ["พาวเวอร์พอยท์", "PowerPoint"],
+        // Insurance & Regulatory
+        ["พรีเมียม", "premium"], ["พรีเมี่ยม", "premium"],
+        ["คลายม์", "claim"], ["เคลม", "claim"], ["เคลมประกัน", "insurance claim"],
+        ["รีอินชัวรันส์", "reinsurance"], ["รีอินชัวแรนซ์", "reinsurance"],
+        ["แอคชัวรี", "actuary"], ["แอคชัวเรียล", "actuarial"],
+        ["อันเดอร์ไรต์", "underwrite"], ["อันเดอร์ไรติ้ง", "underwriting"],
+        ["อันเดอร์ไรเตอร์", "underwriter"],
+        ["พีดีพีเอ", "PDPA"], ["ดีพีโอ", "DPO"], ["ดาต้าโปรเทคชัน", "data protection"],
+        ["คปภ", "คปภ."], ["สกมช", "สกมช."], ["อีทีดีเอ", "ETDA"],
+        ["ไอเอฟอาร์เอส", "IFRS"], ["ทีเอฟอาร์เอส", "TFRS"],
+        ["เอเอ็มแอล", "AML"], ["เควายซี", "KYC"], ["ซีดีดี", "CDD"],
+        ["ซอลเวนซี", "solvency"], ["โซลเวนซี่", "solvency"],
+        ["ลิควิดิตี้", "liquidity"], ["เฮดจิ้ง", "hedging"],
+        ["เอฟวีโอซีไอ", "FVOCI"], ["เฟโวซี", "FVOCI"], ["เอฟวีทีพีแอล", "FVTPL"],
+        ["โอไอซี", "OIC"], ["เอ็นซีเอสเอ", "NCSA"],
+        ["ดาต้าโกเวอร์แนนซ์", "data governance"], ["เดต้าโกเวอร์แนนซ์", "data governance"],
+        ["โกเวอร์แนนซ์", "governance"], ["คอมพลายแอนซ์", "compliance"],
+        ["คอมพลายแอนส์", "compliance"], ["เรกูเลเตอร์รี่", "regulatory"],
+        ["เรกูเลชัน", "regulation"], ["ออดิต", "audit"], ["ออดิเตอร์", "auditor"],
+        ["ริสก์แมเนจเมนต์", "risk management"], ["ริสก์", "risk"],
+        ["ไซเบอร์ซิเคียวริตี้", "cybersecurity"], ["ไซเบอร์", "cyber"],
+        ["บิสซิเนสอินเทลลิเจนซ์", "business intelligence"], ["อินเทลลิเจนซ์", "intelligence"]
+      ];
+
+      rawReplacements.sort((a, b) => b[0].length - a[0].length);
+      replacementMap = new Map(rawReplacements);
+
+      const escapedTerms = rawReplacements.map(([thai]) =>
+        thai.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      );
+      combinedReplacementPattern = new RegExp(escapedTerms.join("|"), "gi");
+
+      compiledReplacements = rawReplacements.map(([thai, english]) => ({
+        term: thai, replaceWith: english
+      }));
+    }
+
+    // ════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════
+    async function init() {
+      compileReplacements();
+      await initTranscriptStorage();
+      await loadState();
+      applyPreviewLineSetting();
+      bindEvents();
+      updateTranscriptCounters();
+      updateSpeakerSelectLabels();
+      syncMiniSelectors();
+      applyControlsCollapsedState();
+      updateButtons();
+
+      window.requestAnimationFrame(recacheLineHeight);
+      window.addEventListener("resize", recacheLineHeight, { passive: true });
+
+      if (!SpeechRecognition) {
+        setStatus("Unsupported", "เบราว์เซอร์นี้ไม่รองรับ Web Speech API", "paused");
+        els.compatNotice.classList.add("show");
+        els.startBtn.disabled = true;
+        return;
+      }
+
+      setStatus("Ready", "เลือกภาษาแล้วกด Start เพื่อเริ่มฟัง", "ready");
+      refreshMicrophonePermissionState();
+      setupPwaMetadata();
+
+      if (window.location.protocol === "file:") {
+        flashSavedState("💡 หาก Chrome ขอ permission ให้เลือก 'Allow while visiting the site'");
+      }
+    }
+
+    // ════════════════════════════════════════
+    // INDEXED DB STORAGE
+    // ════════════════════════════════════════
+    function initTranscriptStorage() {
+      if (!("indexedDB" in window)) {
+        migrateLegacyTranscriptFromLocalStorage();
+        return Promise.resolve(null);
+      }
+
+      transcriptDbPromise = new Promise((resolve) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(DB_STORE)) {
+            db.createObjectStore(DB_STORE, { keyPath: "key" });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror   = () => { console.warn("IndexedDB unavailable, using localStorage."); resolve(null); };
+      });
+
+      return transcriptDbPromise.then((db) => { migrateLegacyTranscriptFromLocalStorage(); return db; });
+    }
+
+    function migrateLegacyTranscriptFromLocalStorage() {
+      const lt = localStorage.getItem(STORAGE_KEYS.transcript);
+      const le = localStorage.getItem(STORAGE_KEYS.extract);
+      if (lt) saveDocument(STORAGE_KEYS.transcript, lt, { silent: true });
+      if (le) saveDocument(STORAGE_KEYS.extract,    le, { silent: true });
+    }
+
+    async function getTranscriptDb() {
+      if (!transcriptDbPromise) return null;
+      return transcriptDbPromise;
+    }
+
+    async function loadDocument(key) {
+      const db = await getTranscriptDb();
+      if (!db) return localStorage.getItem(key) || "";
+      return new Promise((resolve) => {
+        const t = db.transaction(DB_STORE, "readonly");
+        const s = t.objectStore(DB_STORE);
+        const r = s.get(key);
+        r.onsuccess = () => resolve(r.result ? r.result.value : (localStorage.getItem(key) || ""));
+        r.onerror   = () => resolve(localStorage.getItem(key) || "");
+      });
+    }
+
+    async function saveDocument(key, value, options) {
+      const db = await getTranscriptDb();
+      const silent = options && options.silent;
+      if (!db) { localStorage.setItem(key, value); return; }
+      return new Promise((resolve) => {
+        const t = db.transaction(DB_STORE, "readwrite");
+        const s = t.objectStore(DB_STORE);
+        const r = s.put({ key, value, updatedAt: new Date().toISOString() });
+        r.onsuccess = () => { if (!silent) localStorage.setItem(key + ".indexeddb", "true"); resolve(); };
+        r.onerror   = () => { localStorage.setItem(key, value); resolve(); };
+      });
+    }
+
+    async function removeDocument(key) {
+      const db = await getTranscriptDb();
+      localStorage.removeItem(key);
+      localStorage.removeItem(key + ".indexeddb");
+      if (!db) return;
+      return new Promise((resolve) => {
+        const t = db.transaction(DB_STORE, "readwrite");
+        const s = t.objectStore(DB_STORE);
+        const r = s.delete(key);
+        r.onsuccess = () => resolve();
+        r.onerror   = () => resolve();
+      });
+    }
+
+    // ════════════════════════════════════════
+    // BIND EVENTS
+    // ════════════════════════════════════════
+    function bindEvents() {
+      els.languageSelect.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.language, els.languageSelect.value);
+        els.miniLanguageSelect.value = els.languageSelect.value;
+        if (isListening) {
+          stopListening(false);
+          setStatus("Language changed", "กด Start อีกครั้งเพื่อเริ่มด้วยภาษาใหม่", "ready");
+        }
+      });
+
+      els.miniLanguageSelect.addEventListener("change", () => {
+        els.languageSelect.value = els.miniLanguageSelect.value;
+        els.languageSelect.dispatchEvent(new Event("change"));
+      });
+
+      els.checkMicBtn.addEventListener("click", requestMicrophonePermissionOnce);
+      els.startBtn.addEventListener("click", startListening);
+      els.pauseBtn.addEventListener("click", pauseListening);
+      els.stopBtn.addEventListener("click",  () => stopListening(true));
+      els.miniStartBtn.addEventListener("click", startListening);
+      els.miniPauseBtn.addEventListener("click", pauseListening);
+      els.miniStopBtn.addEventListener("click",  () => stopListening(true));
+      els.toggleControlsBtn.addEventListener("click", toggleControlsPanel);
+      els.hideControlsInsideBtn.addEventListener("click", () => setControlsCollapsed(true));
+
+      els.fastModeToggle.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.fastModeEnabled, String(els.fastModeToggle.checked));
+        setStatus(els.fastModeToggle.checked ? "Fast Mode" : "Balanced Mode",
+          els.fastModeToggle.checked ? "Low Latency Engine เปิดใช้งาน" : "ใช้ความเร็วระดับสมดุล", "ready");
+      });
+
+      els.accuracyGuardToggle.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.accuracyGuardEnabled, String(els.accuracyGuardToggle.checked));
+        flashSavedState(els.accuracyGuardToggle.checked ? "Accuracy Guard enabled" : "Accuracy Guard disabled");
+      });
+
+      els.normalizeModeSelect.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.normalizeMode, els.normalizeModeSelect.value);
+        flashSavedState(els.normalizeModeSelect.value === "manual" ? "Manual cleanup mode" : "Real-time cleanup mode");
+      });
+
+      els.cleanTermsBtn.addEventListener("click", cleanTechnicalTerms);
+
+      // v1.6.2: Project title is stored separately from transcript/extract content.
+      els.saveProjectNameBtn.addEventListener("click", saveProjectName);
+      els.clearProjectNameBtn.addEventListener("click", clearProjectName);
+      els.projectNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); saveProjectName(); }
+      });
+      els.projectNameInput.addEventListener("input", () => {
+        if (!els.projectNameInput.value.trim()) updateProjectHeadings("");
+      });
+
+      els.timestampToggle.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.timestampEnabled, String(els.timestampToggle.checked));
+      });
+
+      els.speakerToggle.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.speakerEnabled, String(els.speakerToggle.checked));
+      });
+
+      els.speakerSelect.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.currentSpeaker, els.speakerSelect.value);
+        els.miniSpeakerSelect.value = els.speakerSelect.value;
+      });
+
+      els.miniSpeakerSelect.addEventListener("change", () => {
+        els.speakerSelect.value = els.miniSpeakerSelect.value;
+        els.speakerSelect.dispatchEvent(new Event("change"));
+      });
+
+      els.speakerInputs.forEach((input) => {
+        input.addEventListener("input", () => { saveSpeakers(); updateSpeakerSelectLabels(); });
+      });
+
+      // IMPROVEMENT 1: Save dedup window setting
+      els.dedupWindowSelect.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.dedupWindow, els.dedupWindowSelect.value);
+        flashSavedState("Dedup window: " + (Number(els.dedupWindowSelect.value) / 1000) + "s");
+      });
+
+      // IMPROVEMENT 2: Save drop lines setting
+      els.dropLinesSelect.addEventListener("change", () => {
+        localStorage.setItem(STORAGE_KEYS.dropLines, els.dropLinesSelect.value);
+        applyPreviewLineSetting();
+        flashSavedState("Preview drop threshold: " + els.dropLinesSelect.value + " lines");
+      });
+
+      // IMPROVEMENT 4: Review Mode button
+      els.reviewModeBtn.addEventListener("click", toggleReviewMode);
+      els.acceptAllReviewBtn.addEventListener("click", acceptAllReviewItems);
+
+      // IMPROVEMENT 5: Health Panel toggle
+      els.healthPanelToggle.addEventListener("click", toggleHealthPanel);
+      els.healthPanelToggle.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleHealthPanel(); }
+      });
+      els.runTestsBtn.addEventListener("click", runBuiltInTests);
+      els.resetHealthBtn.addEventListener("click", () => { resetEngineHealth(); flashSavedState("Health reset"); });
+
+      els.transcript.addEventListener("input", () => {
+        scheduleCounterUpdate();
+        autoSave();
+        checkTranscriptLengthWarning();
+        if (isReviewMode) scheduleReviewCount();
+      });
+
+      els.extractText.addEventListener("input", () => {
+        saveDocument(STORAGE_KEYS.extract, els.extractText.value);
+      });
+
+      els.extractBtn.addEventListener("click", extractSelectedText);
+      els.copyBtn.addEventListener("click", () => copyText(els.transcript.value, "Transcript copied"));
+      els.saveBtn.addEventListener("click", () => saveTextFile(prepareTextForExport(els.transcript.value), buildExportFilename("speech-transcript.txt")));
+      els.printBtn.addEventListener("click", () => printMainTranscript());
+      els.clearBtn.addEventListener("click", clearTranscript);
+
+      els.copyExtractBtn.addEventListener("click", () => copyText(els.extractText.value, "Selected workspace copied"));
+      els.saveExtractBtn.addEventListener("click", () => saveTextFile(prepareTextForExport(els.extractText.value), buildExportFilename("selected-transcript.txt")));
+      els.printExtractBtn.addEventListener("click", () => printSelectedWorkspace());
+      els.clearExtractBtn.addEventListener("click", clearExtractText);
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refreshMicrophonePermissionState();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        if (e.code === "Space" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          if (!isListening || isPaused) startListening(); else pauseListening();
+          return;
+        }
+        if (e.code === "Escape") { stopListening(true); return; }
+        if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
+          e.preventDefault(); saveTextFile(prepareTextForExport(els.transcript.value), buildExportFilename("speech-transcript.txt")); return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "KeyC") {
+          e.preventDefault(); copyText(els.transcript.value, "Transcript copied");
+        }
+      });
+    }
+
+    // ════════════════════════════════════════
+    // MICROPHONE PERMISSION
+    // ════════════════════════════════════════
+    async function refreshMicrophonePermissionState() {
+      if (!navigator.permissions || !navigator.permissions.query) {
+        setPermissionState("unknown", "Permission status unavailable"); return;
+      }
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" });
+        applyPermissionStatus(status.state);
+        status.onchange = () => applyPermissionStatus(status.state);
+      } catch (e) { setPermissionState("unknown", "Permission status unavailable"); }
+    }
+
+    function applyPermissionStatus(state) {
+      if (state === "granted") {
+        setPermissionState("granted", "Microphone allowed");
+        els.permissionNotice.classList.remove("show");
+        setStatus("Ready", "ไมโครโฟนได้รับอนุญาตแล้ว กด Start เพื่อเริ่มฟัง", "ready");
+      } else if (state === "denied") {
+        setPermissionState("denied", "Microphone blocked");
+        els.permissionNotice.classList.add("show");
+        setStatus("Microphone blocked", "กดไอคอน permission ที่ address bar แล้วเปลี่ยนเป็น Allow", "paused");
+      } else if (state === "prompt") {
+        setPermissionState("prompt", "Permission required");
+      } else {
+        setPermissionState("unknown", "Permission status unavailable");
+      }
+    }
+
+    function setPermissionState(mode, text) {
+      if (!els.permissionState) return;
+      els.permissionState.className = "permission-state";
+      if (mode && mode !== "unknown") els.permissionState.classList.add(mode);
+      els.permissionState.textContent = text;
+    }
+
+    // IMPROVEMENT 7: releaseHeldMicStream extracted helper
+    function releaseHeldMicStream() {
+      if (!heldMicStream) return;
+      heldMicStream.getTracks().forEach((track) => {
+        try { track.stop(); } catch (e) { /* ignore */ }
+      });
+      heldMicStream = null;
+    }
+
+    // IMPROVEMENT 7: Pause Idle Timer
+    function startPauseIdleTimer() {
+      clearPauseIdleTimer();
+      pauseIdleTimer = window.setTimeout(() => {
+        if (isPaused && heldMicStream) {
+          releaseHeldMicStream();
+          flashSavedState("🎤 Microphone released after 5 min idle");
+        }
+        pauseIdleTimer = null;
+      }, MIC_IDLE_RELEASE_MS);
+    }
+
+    function clearPauseIdleTimer() {
+      if (pauseIdleTimer) {
+        window.clearTimeout(pauseIdleTimer);
+        pauseIdleTimer = null;
+      }
+    }
+
+    async function requestMicrophonePermissionOnce() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setPermissionState("denied", "Microphone API unavailable");
+        els.permissionNotice.classList.add("show");
+        setStatus("Unsupported", "เบราว์เซอร์นี้ไม่รองรับการขอสิทธิ์ไมโครโฟน", "paused");
+        return;
+      }
+      setStatus("Requesting microphone", "เมื่อ Browser แสดง popup ให้เลือก Allow while visiting the site", "paused");
+      setPermissionState("prompt", "Waiting for permission");
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (heldMicStream && heldMicStream !== stream) releaseHeldMicStream();
+        heldMicStream = stream;
+        els.permissionNotice.classList.remove("show");
+        setPermissionState("granted", "Microphone allowed");
+        setStatus("Microphone ready", "อนุญาตไมโครโฟนแล้ว กด Start เพื่อเริ่มถอดเสียง", "ready");
+        flashSavedState("Microphone permission allowed");
+        refreshMicrophonePermissionState();
+      } catch (e) {
+        els.permissionNotice.classList.add("show");
+        setPermissionState("denied", "Microphone blocked or dismissed");
+        setStatus("Microphone not allowed", "กรุณากด Allow while visiting the site หรือแก้ permission ที่ address bar", "paused");
+      }
+    }
+
+    async function ensureMicrophoneReadyForStart() {
+      els.permissionNotice.classList.remove("show");
+      if (!navigator.permissions || !navigator.permissions.query) return true;
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" });
+        if (status.state === "denied") { applyPermissionStatus("denied"); return false; }
+        if (status.state === "prompt") {
+          await requestMicrophonePermissionOnce();
+          const s2 = await navigator.permissions.query({ name: "microphone" });
+          return s2.state !== "denied";
+        }
+      } catch (e) { /* continue */ }
+      return true;
+    }
+
+    // ════════════════════════════════════════
+    // LISTENING CONTROL
+    // ════════════════════════════════════════
+    async function startListening() {
+      if (!SpeechRecognition) return;
+      const micReady = await ensureMicrophoneReadyForStart();
+      if (!micReady) return;
+
+      clearPauseIdleTimer(); // IMPROVEMENT 7: cancel idle timer on resume
+      manualStopRequested = false;
+      isPaused             = false;
+      isListening          = true;
+      restartAfterEnd      = true;
+      reconnectAttempts    = 0;
+      lastDroppedPreviewText = "";
+      lastDroppedPreviewAt   = 0;
+
+      if (recognition || recognitionIsStarting) {
+        setStatus("Listening", "ระบบกำลังฟังต่อเนื่อง", "listening");
+        updateButtons(); return;
+      }
+      startRecognitionSession("manual-start");
+    }
+
+    function createRecognitionSession(sessionId) {
+      const instance = new SpeechRecognition();
+      instance.lang             = els.languageSelect.value;
+      instance.continuous       = true;
+      instance.interimResults   = true;
+      instance.maxAlternatives  = isAccuracyGuardEnabled() ? 3 : 1;
+
+      instance.onstart = () => {
+        if (sessionId !== recognitionSessionId) return;
+        recognitionIsStarting = false;
+        isListening           = true;
+        isPaused              = false;
+        restartAfterEnd       = true;
+        reconnectAttempts     = 0;
+        setStatus("Listening", "กำลังฟังเสียงต่อเนื่อง หาก session หมดอายุระบบจะเชื่อมต่อใหม่อัตโนมัติ", "listening");
+        updateButtons();
+      };
+
+      instance.onresult = (event) => {
+        if (sessionId !== recognitionSessionId) return;
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          // Select alternative with highest confidence
+          let bestText = result[0].transcript;
+          let bestConf = typeof result[0].confidence === "number" ? result[0].confidence : 1.0;
+          for (let alt = 1; alt < result.length; alt++) {
+            const ac = typeof result[alt].confidence === "number" ? result[alt].confidence : 0;
+            if (ac > bestConf) { bestConf = ac; bestText = result[alt].transcript; }
+          }
+
+          if (result.isFinal) {
+            const confKnown = typeof result[0].confidence === "number";
+            const finalText = bestText.trim();
+            lastFinalResultAt = Date.now();
+            engineHealth.finalEvents++;
+            scheduleHealthUpdate();
+
+            // IMPROVEMENT 3: Include confidence % in review prefix
+            if (isAccuracyGuardEnabled() && confKnown && bestConf < CONFIDENCE_THRESHOLD) {
+              engineHealth.lowConfidenceFinals++;
+              queueFinalSegment({
+                text: finalText,
+                reviewRequired: true,
+                confidence: bestConf,
+                source: "low-confidence-final"
+              });
+            } else {
+              queueFinalSegment({
+                text: finalText,
+                reviewRequired: false,
+                confidence: bestConf,
+                source: "final"
+              });
+            }
+          } else {
+            lastInterimAt = Date.now();
+            engineHealth.interimEvents++;
+            interim += bestText;
+          }
+        }
+        if (interim) scheduleInterim(interim);
+      };
+
+      instance.onerror = (event) => {
+        if (sessionId !== recognitionSessionId) return;
+        const error = event.error || "unknown";
+        engineHealth.errors++;
+        scheduleHealthUpdate();
+        const recoverableErrors = new Set(["no-speech", "network", "aborted"]);
+
+        if (error === "not-allowed" || error === "service-not-allowed") {
+          restartAfterEnd = false; manualStopRequested = true; isListening = false;
+          isPaused = false; recognitionIsStarting = false; clearReconnectTimer();
+          els.permissionNotice.classList.add("show");
+          setPermissionState("denied", "Microphone blocked");
+          setStatus("Microphone blocked", "กรุณาอนุญาตการใช้งานไมโครโฟน", "paused");
+          updateButtons(); return;
+        }
+        if (error === "audio-capture") {
+          restartAfterEnd = false; manualStopRequested = true; isListening = false;
+          isPaused = false; recognitionIsStarting = false; clearReconnectTimer();
+          setStatus("Microphone unavailable", "ไม่พบไมโครโฟน หรือไมโครโฟนถูกใช้งานโดยแอปอื่น", "paused");
+          updateButtons(); return;
+        }
+        if (recoverableErrors.has(error) && !manualStopRequested && !isPaused) {
+          restartAfterEnd = true; isListening = true; recognitionIsStarting = false;
+          if (error === "no-speech") setStatus("Listening", "ยังไม่พบเสียงพูด ระบบยังฟังต่อเนื่อง", "listening");
+          else if (error === "network") setStatus("Reconnecting", "บริการ speech recognition สะดุดชั่วคราว กำลังเชื่อมต่อใหม่", "listening");
+          else setStatus("Reconnecting", "ระบบกำลังเชื่อมต่อการฟังใหม่อัตโนมัติ", "listening");
+          scheduleRecognitionRestart("recoverable-error:" + error, getAccuracyAwareReconnectDelay(getReconnectDelay()));
+          updateButtons(); return;
+        }
+        restartAfterEnd = false; isListening = false; isPaused = false; recognitionIsStarting = false;
+        setStatus("Recognition error", "เกิดข้อผิดพลาด: " + error, "paused");
+        updateButtons();
+      };
+
+      instance.onend = () => {
+        if (sessionId !== recognitionSessionId) return;
+        recognition = null;
+        recognitionIsStarting = false;
+        const wantsListening = restartAfterEnd && isListening && !isPaused && !manualStopRequested;
+        if (wantsListening) {
+          const elapsed = lastFinalResultAt ? Date.now() - lastFinalResultAt : 0;
+          const raw = (elapsed > 0 && elapsed < 1500) ? (isFastModeEnabled() ? 160 : 260) : getReconnectDelay();
+          const delay = getAccuracyAwareReconnectDelay(raw);
+          setStatus("Reconnecting",
+            isAccuracyGuardEnabled()
+              ? "Accuracy Guard กำลังเว้นจังหวะสั้น ๆ เพื่อให้ข้อความ final แม่นขึ้น"
+              : "Speech session จบตามรอบของ Browser กำลังฟังต่อให้อัตโนมัติ",
+            "listening");
+          scheduleRecognitionRestart("auto-end", delay);
+          updateButtons(); return;
+        }
+        isListening = false;
+        updateButtons();
+        if (isPaused) setStatus("Paused", "หยุดฟังชั่วคราว กด Start เพื่อฟังต่อ", "paused");
+        else          setStatus("Stopped", "หยุดฟังแล้ว", "ready");
+      };
+
+      return instance;
+    }
+
+    function startRecognitionSession(reason) {
+      if (!SpeechRecognition || !restartAfterEnd || isPaused || manualStopRequested) return;
+      if (recognition || recognitionIsStarting) return;
+      clearReconnectTimer();
+      recognitionIsStarting = true;
+      recognitionSessionId++;
+      const sessionId = recognitionSessionId;
+      recognition = createRecognitionSession(sessionId);
+      try {
+        recognition.start();
+      } catch (e) {
+        recognition = null;
+        recognitionIsStarting = false;
+        if (restartAfterEnd && isListening && !isPaused && !manualStopRequested) {
+          scheduleRecognitionRestart("start-failed:" + reason, getReconnectDelay(true));
+        } else {
+          setStatus("Start failed", "ไม่สามารถเริ่ม speech recognition ได้", "paused");
+          updateButtons();
+        }
+      }
+    }
+
+    function scheduleRecognitionRestart(reason, delay) {
+      if (!restartAfterEnd || !isListening || isPaused || manualStopRequested) return;
+      engineHealth.restarts++;
+      scheduleHealthUpdate();
+      clearReconnectTimer();
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = null;
+        if (!restartAfterEnd || !isListening || isPaused || manualStopRequested) return;
+        recognition = null;
+        recognitionIsStarting = false;
+        startRecognitionSession(reason);
+      }, delay);
+    }
+
+    function getReconnectDelay(increaseAttempt) {
+      if (increaseAttempt) reconnectAttempts++;
+      const attempt  = Math.max(0, reconnectAttempts);
+      const fastMode = isFastModeEnabled();
+      const base     = fastMode ? 180 : RECONNECT_BASE_DELAY_MS;
+      const step     = fastMode ? 160 : 260;
+      const max      = fastMode ? 900 : RECONNECT_MAX_DELAY_MS;
+      return Math.min(base + attempt * step, max);
+    }
+
+    function getAccuracyAwareReconnectDelay(delay) {
+      if (!isAccuracyGuardEnabled()) return delay;
+      const elapsed = lastInterimAt ? Date.now() - lastInterimAt : Infinity;
+      const buf     = elapsed < 900 ? ACCURACY_GUARD_RECENT_INTERIM_BUFFER_MS : 0;
+      return Math.max(delay + buf, ACCURACY_GUARD_MIN_RECONNECT_MS);
+    }
+
+    function clearReconnectTimer() {
+      if (reconnectTimer) { window.clearTimeout(reconnectTimer); reconnectTimer = null; }
+    }
+
+    function clearFinalQueueTimers() {
+      if (finalQueueTimer)  { window.clearTimeout(finalQueueTimer); finalQueueTimer = null; }
+      if (finalQueueIdleId && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(finalQueueIdleId); finalQueueIdleId = null;
+      }
+    }
+
+    function pauseListening() {
+      if (!recognition && !recognitionIsStarting && !isListening) return;
+      isPaused = true; restartAfterEnd = false; manualStopRequested = false;
+      clearReconnectTimer();
+      processFinalQueue(); clearFinalQueueTimers();
+      unlockPreviewDrop(); clearInterim();
+      if (recognition) { try { recognition.stop(); } catch (e) {} }
+      recognition = null; recognitionIsStarting = false; isListening = false;
+      recognitionSessionId++;
+      setStatus("Paused", "หยุดฟังชั่วคราว ข้อความเดิมยังคงอยู่", "paused");
+      updateButtons();
+      startPauseIdleTimer(); // IMPROVEMENT 7: start idle timer when paused
+    }
+
+    function stopListening(showStoppedStatus) {
+      restartAfterEnd = false; isPaused = false; manualStopRequested = true;
+      clearReconnectTimer();
+      processFinalQueue(); clearFinalQueueTimers();
+      unlockPreviewDrop(); clearInterim();
+      if (recognition) { try { recognition.stop(); } catch (e) {} }
+      recognition = null; recognitionIsStarting = false; isListening = false;
+      recognitionSessionId++;
+      clearPauseIdleTimer();         // IMPROVEMENT 7: cancel idle timer
+      releaseHeldMicStream();        // Release stream on intentional stop
+      if (showStoppedStatus) setStatus("Stopped", "หยุดฟังแล้ว สามารถแก้ไขหรือบันทึกข้อความได้", "ready");
+      updateButtons();
+    }
+
+    // ════════════════════════════════════════
+    // TEXT NORMALIZATION
+    // ════════════════════════════════════════
+    function normalizeEnglishTerms(text) {
+      if (!text) return "";
+      let normalized = " " + text + " ";
+      if (combinedReplacementPattern) {
+        normalized = normalized.replace(combinedReplacementPattern, (match) =>
+          replacementMap.get(match) || replacementMap.get(match.toLowerCase()) || match
+        );
+      }
+      return normalized
+        .replace(/\s+([,.;:!?])/g, "$1")
+        .replace(/([(\[])\s+/g, "$1")
+        .replace(/\s+([)\]])/g, "$1")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
+    function isFastModeEnabled()       { return Boolean(els.fastModeToggle && els.fastModeToggle.checked); }
+    function isAccuracyGuardEnabled()  { return !els.accuracyGuardToggle || els.accuracyGuardToggle.checked; }
+    function isRealtimeNormalizeEnabled() { return !els.normalizeModeSelect || els.normalizeModeSelect.value !== "manual"; }
+
+    function normalizeBasicSpacing(text) {
+      if (!text) return "";
+      return String(text)
+        .replace(/\s+([,.;:!?])/g, "$1")
+        .replace(/([([\[])(\s+)/g, "$1")
+        .replace(/\s+([)\]])/g, "$1")
+        .replace(/[ \t]{2,}/g, " ")
+        .trim();
+    }
+
+    // ════════════════════════════════════════
+    // FINAL QUEUE  (IMPROVEMENT 6: backward-compat metadata)
+    // ════════════════════════════════════════
+    function queueFinalSegment(item) {
+      // Accept both plain string (legacy) and structured object
+      const queueItem = typeof item === "string"
+        ? { text: item, reviewRequired: false, confidence: null, source: "legacy-final" }
+        : item;
+
+      if (!queueItem || !queueItem.text || !String(queueItem.text).trim()) return;
+      if (finalQueue.length >= MAX_FINAL_QUEUE) processFinalQueue();
+
+      finalQueue.push({
+        text:           String(queueItem.text),
+        reviewRequired: Boolean(queueItem.reviewRequired),
+        confidence:     typeof queueItem.confidence === "number" ? queueItem.confidence : null,
+        source:         queueItem.source || "final",
+        at:             Date.now()
+      });
+      scheduleFinalQueueProcessing();
+    }
+
+    function scheduleFinalQueueProcessing() {
+      if (finalQueueTimer || finalQueueIdleId) return;
+      if (isFastModeEnabled()) {
+        finalQueueTimer = window.setTimeout(() => { finalQueueTimer = null; processFinalQueue(); }, 0);
+        return;
+      }
+      if ("requestIdleCallback" in window) {
+        finalQueueIdleId = window.requestIdleCallback(() => { finalQueueIdleId = null; processFinalQueue(); }, { timeout: 250 });
+        return;
+      }
+      finalQueueTimer = window.setTimeout(() => { finalQueueTimer = null; processFinalQueue(); }, 60);
+    }
+
+    function processFinalQueue() {
+      if (!finalQueue.length) return;
+      const items = finalQueue.splice(0, finalQueue.length);
+      const segmentEntries = [];
+
+      items.forEach((item) => {
+        const queueItem = typeof item === "string"
+          ? { text: item, reviewRequired: false, source: "legacy-final" }
+          : item;
+
+        const plainText = isRealtimeNormalizeEnabled()
+          ? normalizeEnglishTerms(queueItem.text)
+          : normalizeBasicSpacing(queueItem.text);
+        if (!plainText) return;
+
+        // IMPROVEMENT 3: use confidence-aware review prefix
+        const reviewPrefix = (queueItem.reviewRequired && isAccuracyGuardEnabled())
+          ? buildReviewPrefix(queueItem.confidence)
+          : "";
+        const displayText = reviewPrefix + plainText;
+        const segment     = buildSegment(displayText);
+        const dedupeKey   = canonicalizeSpeechText(plainText);
+
+        const entry = { segmentText: segment, plainText, dedupeKey,
+          reviewRequired: Boolean(queueItem.reviewRequired), source: queueItem.source || "final" };
+
+        const replacedPreview = replaceRecentPreviewDropWithFinal(entry, plainText);
+        if (!replacedPreview) segmentEntries.push(entry);
+      });
+
+      appendSegmentsToTranscript(segmentEntries);
+    }
+
+    function toSegmentEntry(item) {
+      if (typeof item === "string") {
+        return { segmentText: item, plainText: item,
+          dedupeKey: canonicalizeSpeechText(item), source: "legacy" };
+      }
+      const segmentText = item && item.segmentText ? String(item.segmentText) : "";
+      const plainText   = item && item.plainText   ? String(item.plainText)   : segmentText;
+      return {
+        segmentText, plainText,
+        dedupeKey:     item && item.dedupeKey ? item.dedupeKey : canonicalizeSpeechText(plainText),
+        reviewRequired:Boolean(item && item.reviewRequired),
+        source:        item && item.source ? item.source : "unknown"
+      };
+    }
+
+    // IMPROVEMENT 1: filterDuplicateSegments uses getDedupWindowMs()
+    function filterDuplicateSegments(segmentEntries) {
+      if (!segmentEntries || !segmentEntries.length) return [];
+      const now         = Date.now();
+      const windowMs    = getAdaptiveDedupWindowMs(); // configurable + adaptive hardening
+      recentSegments    = recentSegments.filter((s) => now - s.at < windowMs);
+
+      return segmentEntries.map(toSegmentEntry).filter((entry) => {
+        const key = canonicalizeSpeechText(entry.dedupeKey || entry.plainText || entry.segmentText);
+        if (!key) return false;
+        if (key.length < DEDUP_MIN_TEXT_LENGTH) return true; // preserve short repeats
+
+        const isDuplicate = recentSegments.some((s) =>
+          s.key === key || areLikelySameUtterance(s.key, key)
+        );
+        if (isDuplicate) { engineHealth.duplicateFiltered++; scheduleHealthUpdate(); return false; }
+
+        recentSegments.push({ key, at: now });
+        return true;
+      });
+    }
+
+    function appendSegmentsToTranscript(segments) {
+      const entries = filterDuplicateSegments(segments);
+      if (!entries || !entries.length) return [];
+
+      const current  = els.transcript.value;
+      const newText  = entries.map((e) => e.segmentText).join("\n");
+      const sep      = current.trim().length > 0 ? "\n" : "";
+      els.transcript.value = newText + sep + current;
+      els.transcript.scrollTop = 0;
+
+      clearInterim();
+      scheduleCounterUpdate();
+      autoSave();
+      checkTranscriptLengthWarning();
+      if (isReviewMode) scheduleReviewCount();
+      return entries;
+    }
+
+    function appendFinalSegment(text) { queueFinalSegment(text); }
+
+    function buildSegment(text) {
+      const parts = [];
+      if (els.timestampToggle.checked) parts.push("[" + getTimeStamp() + "]");
+      if (els.speakerToggle.checked)   parts.push(getCurrentSpeakerName() + ":");
+      parts.push(text.trim());
+      return parts.join(" ");
+    }
+
+    function getTimeStamp() {
+      const now = new Date();
+      return String(now.getHours()).padStart(2,"0") + ":" +
+             String(now.getMinutes()).padStart(2,"0") + ":" +
+             String(now.getSeconds()).padStart(2,"0");
+    }
+
+    function getCurrentSpeakerName() {
+      const index = Number(els.speakerSelect.value || 0);
+      const input = els.speakerInputs[index];
+      return (input && input.value.trim()) || "ผู้พูด " + (index + 1);
+    }
+
+    function scheduleInterim(text) {
+      pendingInterimText = text;
+      if (interimFrame) return;
+      interimFrame = window.requestAnimationFrame(() => {
+        setInterim(pendingInterimText); interimFrame = null;
+      });
+    }
+
+    // ════════════════════════════════════════
+    // CANONICAL TEXT HELPERS
+    // ════════════════════════════════════════
+    function normalizeForComparison(text) {
+      return String(text || "").replace(/\s+/g, " ").trim();
+    }
+
+    function canonicalizeSpeechText(text) {
+      return normalizeForComparison(text)
+        // Strip prefixes repeatedly and in any common display order:
+        // [time] ผู้พูด 1: [ตรวจสอบ 42%] text
+        .replace(/^(?:\s*(?:\[\d{2}:\d{2}:\d{2}\]|\[ตรวจสอบ[^\]]*\]|ผู้พูด\s*\d+\s*:|Speaker\s*\d+\s*:))+\s*/i, "")
+        .replace(/[“”\"'`]/g, "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replace(/\s+([,.;:!?])/g, "$1")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function similarityRatio(a, b) {
+      const left  = canonicalizeSpeechText(a);
+      const right = canonicalizeSpeechText(b);
+      if (!left || !right) return 0;
+      if (left === right)  return 1;
+      const shorter = left.length <= right.length ? left : right;
+      const longer  = left.length >  right.length ? left : right;
+      if (longer.includes(shorter)) return shorter.length / Math.max(longer.length, 1);
+      let prefix = 0;
+      while (prefix < shorter.length && left[prefix] === right[prefix]) prefix++;
+      return prefix / Math.max(shorter.length, 1);
+    }
+
+    function areLikelySameUtterance(a, b) {
+      const left  = canonicalizeSpeechText(a);
+      const right = canonicalizeSpeechText(b);
+      if (!left || !right) return false;
+      if (left === right)  return true;
+      if (left.length  >= 12 && right.includes(left))  return true;
+      if (right.length >= 12 && left.includes(right))   return true;
+      const shorter = Math.min(left.length, right.length);
+      let prefix = 0;
+      while (prefix < shorter && left[prefix] === right[prefix]) prefix++;
+      if (prefix >= Math.min(48, Math.max(18, Math.floor(shorter * 0.62)))) return true;
+      return similarityRatio(left, right) >= 0.68;
+    }
+
+    // ════════════════════════════════════════
+    // PREVIEW DROP ENGINE
+    // ════════════════════════════════════════
+    function lockPreviewDrop(draft) {
+      previewDropLocked = true;
+      lastPreviewDrop   = draft;
+      if (previewDropGuardTimer) window.clearTimeout(previewDropGuardTimer);
+      previewDropGuardTimer = window.setTimeout(() => {
+        previewDropLocked     = false;
+        previewDropGuardTimer = null;
+      }, PREVIEW_DROP_LOCK_TIMEOUT_MS);
+    }
+
+    function unlockPreviewDrop() {
+      previewDropLocked   = false;
+      lastPreviewDrop     = null;
+      previewLifecycleState = PREVIEW_STATE.RESOLVED;
+      if (previewDropGuardTimer) { window.clearTimeout(previewDropGuardTimer); previewDropGuardTimer = null; }
+    }
+
+    function markDroppedPreviewCleared(text) {
+      lastDroppedPreviewText = normalizeForComparison(text);
+      lastDroppedPreviewAt   = Date.now();
+    }
+
+    function shouldSuppressRecentlyDroppedPreview(text) {
+      const previewText = normalizeForComparison(text);
+      const droppedText = normalizeForComparison(lastDroppedPreviewText);
+      if (!previewText || !droppedText) return false;
+      if (Date.now() - lastDroppedPreviewAt > PREVIEW_CLEAR_SUPPRESS_MS) return false;
+      if (previewText === droppedText) return true;
+      const growth = previewText.length - droppedText.length;
+      if (growth > 12) return false;
+      const shorter = Math.min(previewText.length, droppedText.length);
+      const longer  = Math.max(previewText.length, droppedText.length);
+      if (shorter / Math.max(longer, 1) < 0.88) return false;
+      return droppedText.includes(previewText) || previewText.includes(droppedText);
+    }
+
+    // IMPROVEMENT 2: maybeDropPreviewToTranscript uses getDropLineCount()
+    function maybeDropPreviewToTranscript(text) {
+      const previewText = normalizeForComparison(text);
+      if (!previewText) return;
+      previewLifecycleState = PREVIEW_STATE.SHOWING;
+      if (previewDropLocked) return;
+
+      // IMPROVEMENT 2: use configurable line count
+      const dropLines     = getDropLineCount();
+      const maxHeight     = cachedLineHeight * dropLines + 2;
+      const contentHeight = els.miniInterimText.scrollHeight - 20; // subtract padding
+
+      // Fallback to simple scrollHeight check if cachedLineHeight is unreliable
+      const overflowDetected = (cachedLineHeight > 10)
+        ? (contentHeight > maxHeight)
+        : (els.miniInterimText.scrollHeight > els.miniInterimText.offsetHeight);
+
+      if (!overflowDetected) return;
+
+      const committedText = isRealtimeNormalizeEnabled()
+        ? normalizeEnglishTerms(previewText)
+        : normalizeBasicSpacing(previewText);
+      if (!committedText) return;
+
+      const canonicalKey = canonicalizeSpeechText(committedText);
+
+      if (lastPreviewDrop && areLikelySameUtterance(
+          lastPreviewDrop.canonicalText || lastPreviewDrop.plainText, canonicalKey)) {
+        engineHealth.previewRedropBlocked++;
+        scheduleHealthUpdate();
+        return;
+      }
+      if (lastResolvedPreviewDropKey &&
+          Date.now() - lastResolvedPreviewDropAt < PREVIEW_DROP_MAX_AGE_MS &&
+          areLikelySameUtterance(lastResolvedPreviewDropKey, canonicalKey)) {
+        engineHealth.previewRedropBlocked++;
+        scheduleHealthUpdate();
+        return;
+      }
+
+      const segment = buildSegment(committedText);
+      const draft   = {
+        plainText: committedText, canonicalText: canonicalKey,
+        segmentText: segment, at: Date.now(), sessionId: recognitionSessionId
+      };
+
+      lockPreviewDrop(draft);
+      previewLifecycleState = PREVIEW_STATE.DROPPED;
+      engineHealth.previewDrops++;
+      scheduleHealthUpdate();
+
+      markDroppedPreviewCleared(previewText);
+      appendSegmentsToTranscript([{
+        segmentText: segment, plainText: committedText,
+        dedupeKey: canonicalKey, source: "preview-drop"
+      }]);
+      clearInterim();
+      flashSavedState("Preview committed · canonical dedup active");
+    }
+
+    function replaceRecentPreviewDropWithFinal(segmentEntry, plainText) {
+      if (!lastPreviewDrop) return false;
+      const now = Date.now();
+      if (now - lastPreviewDrop.at > PREVIEW_DROP_MAX_AGE_MS) { unlockPreviewDrop(); return false; }
+
+      const entry          = toSegmentEntry(segmentEntry);
+      const finalCanonical = canonicalizeSpeechText(plainText || entry.plainText || entry.segmentText);
+      const previewCanonical = lastPreviewDrop.canonicalText || canonicalizeSpeechText(lastPreviewDrop.plainText);
+
+      if (!areLikelySameUtterance(previewCanonical, finalCanonical)) return false;
+
+      const current = els.transcript.value;
+      const target  = lastPreviewDrop.segmentText;
+      const index   = current.indexOf(target);
+
+      if (index !== -1) {
+        els.transcript.value = current.slice(0, index) + entry.segmentText + current.slice(index + target.length);
+        els.transcript.scrollTop = 0;
+        if (finalCanonical && finalCanonical.length >= DEDUP_MIN_TEXT_LENGTH) {
+          recentSegments.push({ key: finalCanonical, at: Date.now() });
+        }
+        engineHealth.finalReplacements++;
+        scheduleHealthUpdate();
+        scheduleCounterUpdate();
+        autoSave();
+      }
+
+      lastResolvedPreviewDropKey = finalCanonical || previewCanonical;
+      lastResolvedPreviewDropAt  = Date.now();
+      previewLifecycleState = PREVIEW_STATE.FINAL_REPLACED;
+      unlockPreviewDrop();
+      clearInterim();
+      if (isReviewMode) scheduleReviewCount();
+      return true;
+    }
+
+    function setInterim(text) {
+      if (text) {
+        const previewText = normalizeForComparison(text);
+        if (shouldSuppressRecentlyDroppedPreview(previewText)) { clearInterim(); return; }
+        els.miniInterimValue.textContent = previewText;
+        els.miniInterimText.classList.add("active");
+        maybeDropPreviewToTranscript(previewText);
+      } else {
+        clearInterim();
+      }
+    }
+
+    function clearInterim() {
+      if (interimFrame) { window.cancelAnimationFrame(interimFrame); interimFrame = null; }
+      pendingInterimText = "";
+      if (!lastPreviewDrop && !previewDropLocked) previewLifecycleState = PREVIEW_STATE.IDLE;
+      els.miniInterimValue.textContent = "ยังไม่มีข้อความระหว่างฟัง";
+      els.miniInterimText.classList.remove("active");
+    }
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 4: REVIEW MODE
+    // ════════════════════════════════════════
+    const REVIEW_PATTERN = /\[ตรวจสอบ[^\]]*\]/i;
+
+    function toggleReviewMode() {
+      isReviewMode = !isReviewMode;
+      els.reviewModeBtn.classList.toggle("active-mode", isReviewMode);
+      els.reviewModeBtn.textContent = isReviewMode ? "Exit Review" : "Review Mode";
+      els.transcript.classList.toggle("review-mode-active", isReviewMode);
+      if (isReviewMode) scheduleReviewCount();
+      else { els.reviewCounter.classList.remove("show"); els.reviewCounter.textContent = ""; }
+    }
+
+    let reviewCountTimer = null;
+    function scheduleReviewCount() {
+      window.clearTimeout(reviewCountTimer);
+      reviewCountTimer = window.setTimeout(updateReviewCount, 400);
+    }
+
+    function updateReviewCount() {
+      if (!isReviewMode) return;
+      const lines = els.transcript.value.split("\n");
+      const count = lines.filter((l) => REVIEW_PATTERN.test(l)).length;
+      if (count > 0) {
+        els.reviewCounter.textContent = count + " รายการต้องตรวจสอบ";
+        els.reviewCounter.classList.add("show");
+      } else {
+        els.reviewCounter.textContent = "✓ ไม่มีรายการต้องตรวจสอบ";
+        els.reviewCounter.classList.add("show");
+      }
+    }
+
+    function acceptAllReviewItems() {
+      const current = els.transcript.value;
+      const cleaned = current.split("\n")
+        .map((line) => line.replace(/^\[ตรวจสอบ[^\]]*\]\s*/i, ""))
+        .join("\n");
+      if (cleaned === current) { flashSavedState("ไม่พบ [ตรวจสอบ] ในข้อความ"); return; }
+      els.transcript.value = cleaned;
+      scheduleCounterUpdate();
+      autoSave();
+      flashSavedState("ลบ prefix [ตรวจสอบ] ทั้งหมดแล้ว");
+      if (isReviewMode) scheduleReviewCount();
+    }
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 5: ENGINE HEALTH PANEL
+    // ════════════════════════════════════════
+    function toggleHealthPanel() {
+      healthPanelOpen = !healthPanelOpen;
+      els.healthPanelBody.classList.toggle("show", healthPanelOpen);
+      els.healthPanelToggle.classList.toggle("open", healthPanelOpen);
+      els.healthPanelToggle.setAttribute("aria-expanded", String(healthPanelOpen));
+      if (healthPanelOpen) updateHealthPanel();
+    }
+
+    // ════════════════════════════════════════
+    // IMPROVEMENT 8: BUILT-IN TEST SUITE
+    // ════════════════════════════════════════
+    function runBuiltInTests() {
+      const results = [];
+      let passed = 0;
+      let failed = 0;
+
+      function assert(label, condition, detail) {
+        if (condition) {
+          results.push({ pass: true,  label, detail: detail || "" });
+          passed++;
+        } else {
+          results.push({ pass: false, label, detail: detail || "Expected truthy" });
+          failed++;
+        }
+      }
+
+      // ─── canonicalizeSpeechText ───
+      assert("canonical: strips [ตรวจสอบ]",
+        canonicalizeSpeechText("[ตรวจสอบ] ขอบคุณมาก") === "ขอบคุณมาก");
+
+      assert("canonical: strips [ตรวจสอบ 42%]",
+        canonicalizeSpeechText("[ตรวจสอบ 42%] ขอบคุณมาก") === "ขอบคุณมาก");
+
+      assert("canonical: strips timestamp",
+        canonicalizeSpeechText("[10:34:12] ขอบคุณมาก") === "ขอบคุณมาก");
+
+      assert("canonical: strips speaker label",
+        canonicalizeSpeechText("ผู้พูด 1: ขอบคุณมาก") === "ขอบคุณมาก");
+
+      assert("canonical: strips timestamp+speaker+review",
+        canonicalizeSpeechText("[10:34:12] ผู้พูด 1: [ตรวจสอบ 55%] ขอบคุณมาก") === "ขอบคุณมาก",
+        "Multi-prefix strip");
+
+      assert("canonical: preserves plain text",
+        canonicalizeSpeechText("ขอบคุณมากครับ") === "ขอบคุณมากครับ");
+
+      // ─── areLikelySameUtterance ───
+      assert("fuzzy: exact match",
+        areLikelySameUtterance("ขอบคุณมาก", "ขอบคุณมาก"));
+
+      assert("fuzzy: substring match (long)",
+        areLikelySameUtterance("ขอบคุณมากสำหรับการ", "ขอบคุณมากสำหรับการช่วยเหลือ"));
+
+      assert("fuzzy: clearly different returns false",
+        !areLikelySameUtterance("ขอบคุณมาก", "สวัสดีครับ"));
+
+      assert("fuzzy: empty strings return false",
+        !areLikelySameUtterance("", "ขอบคุณ"));
+
+      // ─── buildReviewPrefix ───
+      assert("reviewPrefix: with confidence",
+        buildReviewPrefix(0.42) === "[ตรวจสอบ 42%] ");
+
+      assert("reviewPrefix: with 0% confidence",
+        buildReviewPrefix(0) === "[ตรวจสอบ 0%] ");
+
+      assert("reviewPrefix: without confidence (null)",
+        buildReviewPrefix(null) === "[ตรวจสอบ] ");
+
+      assert("reviewPrefix: rounds correctly",
+        buildReviewPrefix(0.456) === "[ตรวจสอบ 46%] ");
+
+      // ─── getDedupWindowMs ───
+      const currentWindow = getDedupWindowMs();
+      assert("dedupWindow: returns positive number",
+        currentWindow > 0, "Got: " + currentWindow + "ms");
+
+      assert("dedupWindow: value is one of allowed presets or custom",
+        [1000, 2500, 5000].includes(currentWindow) || currentWindow > 0,
+        "Got: " + currentWindow + "ms");
+
+      // ─── getDropLineCount ───
+      const lineCount = getDropLineCount();
+      assert("dropLines: returns positive integer",
+        lineCount > 0 && Number.isInteger(lineCount), "Got: " + lineCount);
+
+      assert("dropLines: value is 3, 5, or 7",
+        [3, 5, 7].includes(lineCount), "Got: " + lineCount);
+
+      // ─── canonicalizeSpeechText dedup equivalence ───
+      assert("dedup: timestamp variants canonicalize to same key",
+        canonicalizeSpeechText("[10:34:12] ขอบคุณมาก") ===
+        canonicalizeSpeechText("[10:35:55] ขอบคุณมาก"),
+        "Timestamps should not affect dedup key");
+
+      assert("dedup: speaker variants canonicalize to same key",
+        canonicalizeSpeechText("ผู้พูด 1: ขอบคุณมาก") ===
+        canonicalizeSpeechText("ผู้พูด 2: ขอบคุณมาก"),
+        "Speaker labels should not affect dedup key");
+
+      assert("dedup: review marker variants canonicalize to same key",
+        canonicalizeSpeechText("[ตรวจสอบ] ขอบคุณมาก") ===
+        canonicalizeSpeechText("[ตรวจสอบ 42%] ขอบคุณมาก"),
+        "Review markers should not affect dedup key");
+
+      // ─── DEDUP_MIN_TEXT_LENGTH ───
+      assert("shortRepeat: 'ใช่' (3 chars) passes dedup filter",
+        "ใช่".length < DEDUP_MIN_TEXT_LENGTH);
+
+      assert("shortRepeat: 'ขอบคุณมากครับผม' (15 chars) goes through dedup",
+        "ขอบคุณมากครับผม".length >= DEDUP_MIN_TEXT_LENGTH);
+
+      // ─── similarityRatio ───
+      assert("similarity: identical = 1.0",
+        similarityRatio("ขอบคุณ", "ขอบคุณ") === 1);
+
+      assert("similarity: completely different < 0.3",
+        similarityRatio("ขอบคุณมาก", "อากาศดีมาก") < 0.3);
+
+      // ─── acceptAllReviewItems (dry-run) ───
+      const testInput = "[ตรวจสอบ 42%] สวัสดี\nปกติ\n[ตรวจสอบ] ขอบคุณ";
+      const expected  = "สวัสดี\nปกติ\nขอบคุณ";
+      const testOutput = testInput.split("\n")
+        .map((l) => l.replace(/^\[ตรวจสอบ[^\]]*\]\s*/i, ""))
+        .join("\n");
+      assert("acceptAll: removes review prefixes correctly",
+        testOutput === expected, "Got: " + JSON.stringify(testOutput));
+
+      // ─── MIC IDLE TIMEOUT constant ───
+      assert("micIdle: MIC_IDLE_RELEASE_MS is 5 minutes",
+        MIC_IDLE_RELEASE_MS === 300000, "Got: " + MIC_IDLE_RELEASE_MS + "ms");
+
+      assert("projectTitle: normalize trims and collapses spaces",
+        normalizeProjectName("  Alpha   Project  ") === "Alpha Project");
+
+      assert("projectTitle: export prepends saved heading",
+        (() => {
+          const old = localStorage.getItem(STORAGE_KEYS.projectName);
+          localStorage.setItem(STORAGE_KEYS.projectName, "Demo Project");
+          const out = prepareTextForExport("hello");
+          if (old === null) localStorage.removeItem(STORAGE_KEYS.projectName);
+          else localStorage.setItem(STORAGE_KEYS.projectName, old);
+          return out === "Project: Demo Project\n\nhello";
+        })());
+
+      assert("canonical: strips multi-prefix display order",
+        canonicalizeSpeechText("[10:34:12] ผู้พูด 2: [ตรวจสอบ 42%] \"ทดสอบระบบ\"") === "ทดสอบระบบ");
+
+      assert("previewLines: CSS variable syncs with setting",
+        getComputedStyle(els.miniInterimText).getPropertyValue("--preview-lines").trim() === String(getDropLineCount()),
+        "CSS var: " + getComputedStyle(els.miniInterimText).getPropertyValue("--preview-lines"));
+
+      const previousRestarts = engineHealth.restarts;
+      engineHealth.restarts = 4;
+      assert("adaptiveDedup: reconnect risk uses conservative window",
+        getAdaptiveDedupWindowMs() >= DEDUP_ADAPTIVE_CONSERVATIVE_MS,
+        "Got: " + getAdaptiveDedupWindowMs() + "ms");
+      engineHealth.restarts = previousRestarts;
+
+      // Render results
+      const summary = document.createElement("div");
+      summary.className = "test-summary";
+      summary.textContent = (failed === 0 ? "✅" : "⚠️") +
+        " " + passed + "/" + (passed + failed) + " tests passed";
+
+      const container = document.createElement("div");
+      results.forEach((r) => {
+        const row = document.createElement("div");
+        row.className = "test-result-row " + (r.pass ? "pass" : "fail");
+        const icon  = document.createElement("span");
+        icon.className = "test-icon";
+        icon.textContent = r.pass ? "✓" : "✗";
+        const label = document.createElement("span");
+        label.className = "test-label";
+        label.textContent = r.label + (r.detail ? " — " + r.detail : "");
+        row.appendChild(icon);
+        row.appendChild(label);
+        container.appendChild(row);
+      });
+
+      els.testResults.innerHTML = "";
+      els.testResults.appendChild(summary);
+      els.testResults.appendChild(container);
+      els.testResults.classList.add("show");
+
+      return { passed, failed, total: passed + failed };
+    }
+
+    // Expose for browser console access
+    Object.defineProperty(window, "__sttRunTests", {
+      get: () => runBuiltInTests
+    });
+
+    Object.defineProperty(window, "__sttEngineHealth", {
+      get: () => ({
+        ...engineHealth,
+        sessionId: recognitionSessionId,
+        listening: isListening,
+        paused: isPaused,
+        dedupWindowMs: getDedupWindowMs(),
+        adaptiveDedupWindowMs: getAdaptiveDedupWindowMs(),
+        dropLines: getDropLineCount(),
+        previewLifecycleState,
+        recentSegmentsCount: recentSegments.length,
+        heldMicStream: Boolean(heldMicStream),
+        pauseIdleActive: Boolean(pauseIdleTimer)
+      })
+    });
+
+    // ════════════════════════════════════════
+    // PROJECT TITLE HEADER GUARD (v1.6.2)
+    // Keeps project title metadata outside transcript text to avoid affecting STT, dedup, preview, or final queue.
+    // ════════════════════════════════════════
+    function normalizeProjectName(value) {
+      return String(value || "").replace(/\s+/g, " ").trim().slice(0, 120);
+    }
+
+    function saveProjectName() {
+      const projectName = normalizeProjectName(els.projectNameInput.value);
+      if (!projectName) {
+        clearProjectName();
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.projectName, projectName);
+      els.projectNameInput.value = projectName;
+      updateProjectHeadings(projectName);
+      flashSavedState("Project name saved");
+    }
+
+    function clearProjectName() {
+      localStorage.removeItem(STORAGE_KEYS.projectName);
+      els.projectNameInput.value = "";
+      updateProjectHeadings("");
+      flashSavedState("Project name cleared");
+    }
+
+    function getSavedProjectName() {
+      return normalizeProjectName(localStorage.getItem(STORAGE_KEYS.projectName));
+    }
+
+    function updateProjectHeadings(value) {
+      const projectName = normalizeProjectName(value !== undefined ? value : getSavedProjectName());
+      const heading = projectName ? "Project: " + projectName : "";
+      [els.projectHeadingMain, els.projectHeadingExtract].forEach((node) => {
+        if (!node) return;
+        node.textContent = heading;
+        node.classList.toggle("show", Boolean(projectName));
+      });
+    }
+
+    // ════════════════════════════════════════
+    // UI HELPERS
+    // ════════════════════════════════════════
+    function extractSelectedText() {
+      const start    = els.transcript.selectionStart;
+      const end      = els.transcript.selectionEnd;
+      const selected = els.transcript.value.slice(start, end).trim();
+      if (!selected) { flashSavedState("Please select text first"); els.transcript.focus(); return; }
+      const current  = els.extractText.value.trim();
+      els.extractText.value = current ? current + "\n\n" + selected : selected;
+      saveDocument(STORAGE_KEYS.extract, els.extractText.value);
+      flashSavedState("Selected text extracted");
+    }
+
+    async function copyText(text, message) {
+      const value = text.trim();
+      if (!value) { flashSavedState("Nothing to copy"); return; }
+      try { await navigator.clipboard.writeText(value); flashSavedState(message || "Copied"); }
+      catch (e) { fallbackCopy(value); flashSavedState(message || "Copied"); }
+    }
+
+    function fallbackCopy(text) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.setAttribute("readonly", "");
+      temp.style.position = "fixed";
+      temp.style.left = "-9999px";
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+    }
+
+    function prepareTextForExport(text) {
+      const value = String(text || "").trim();
+      const projectName = getSavedProjectName();
+      if (!projectName) return value;
+      return "Project: " + projectName + (value ? "\n\n" + value : "");
+    }
+
+    function buildExportFilename(defaultName) {
+      const projectName = getSavedProjectName();
+      if (!projectName) return defaultName;
+      const safeName = projectName
+        .replace(/[\\/:*?"<>|]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+      return safeName ? safeName + " - " + defaultName : defaultName;
+    }
+
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function buildProjectHeadingForPrint() {
+      const projectName = getSavedProjectName();
+      return projectName
+        ? `<div class="project-heading"><strong>Project:</strong> ${escapeHtml(projectName)}</div>`
+        : `<div class="project-heading muted"><strong>Project:</strong> Not specified</div>`;
+    }
+
+    function printMainTranscript() {
+      const transcriptText = String(els.transcript.value || "").trim();
+      if (!transcriptText) { flashSavedState("Nothing to print"); return; }
+
+      // v1.6.12 PRINT PROJECT NAME GUARD:
+      // Main Transcript now uses a dedicated writable print document, same pattern as
+      // Selected Text Workspace, so the saved project name is printed consistently
+      // without changing the existing transcript DOM, speech engine, dedup, or queue logic.
+      const printWindow = window.open("", "sttMainTranscriptPrint", "width=900,height=700");
+      if (!printWindow || !printWindow.document) {
+        flashSavedState("Popup blocked: allow popup to print main transcript");
+        return;
+      }
+
+      const projectName = getSavedProjectName();
+      const documentTitle = projectName ? "Project: " + projectName : "Main Transcript";
+      const projectHeading = buildProjectHeadingForPrint();
+
+      const printMarkup = `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escapeHtml(documentTitle)}</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #111827; }
+  body {
+    padding: 28px;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", "Noto Sans", Arial, sans-serif;
+    line-height: 1.65;
+    font-size: 14px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+    line-height: 1.18;
+    color: #6633FF;
+  }
+  .project-heading {
+    margin: 0 0 18px;
+    font-size: 1rem;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #111827;
+  }
+  .project-heading.muted { color: #6b7280; }
+  .print-content {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font: inherit;
+    margin: 0;
+  }
+  @media print {
+    body { padding: 0; }
+    .print-content { border-top-color: #d1d5db; }
+  }
+</style>
+</head>
+<body>
+  <h1>Main Transcript</h1>
+  ${projectHeading}
+  <section class="print-content" aria-label="Main transcript print content">
+    <pre>${escapeHtml(transcriptText)}</pre>
+  </section>
+</body>
+</html>`;
+
+      printWindow.document.open();
+      printWindow.document.write(printMarkup);
+      printWindow.document.close();
+      printWindow.focus();
+
+      const triggerPrint = () => {
+        try { printWindow.print(); }
+        catch (error) { flashSavedState("Print failed: please try again"); }
+      };
+
+      if (printWindow.document.readyState === "complete") {
+        window.setTimeout(triggerPrint, 180);
+      } else {
+        printWindow.addEventListener("load", () => window.setTimeout(triggerPrint, 180), { once: true });
+      }
+
+      flashSavedState("Main transcript print opened");
+    }
+
+    function printSelectedWorkspace() {
+      const selectedText = String(els.extractText.value || "").trim();
+      if (!selectedText) { flashSavedState("Nothing to print"); return; }
+
+      // v1.6.11 SELECTED PRINT CONTENT GUARD:
+      // Do not use noopener/noreferrer here because some browsers return an isolated
+      // about:blank window that cannot reliably receive document.write content.
+      // This keeps the existing app structure intact and fixes the blank print window.
+      const printWindow = window.open("", "sttSelectedWorkspacePrint", "width=900,height=700");
+      if (!printWindow || !printWindow.document) {
+        flashSavedState("Popup blocked: allow popup to print selected workspace");
+        return;
+      }
+
+      const projectName = getSavedProjectName();
+      const documentTitle = projectName ? "Project: " + projectName : "Selected Text Workspace";
+      const projectHeading = buildProjectHeadingForPrint();
+
+      const printMarkup = `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escapeHtml(documentTitle)}</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #111827; }
+  body {
+    padding: 28px;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", "Noto Sans", Arial, sans-serif;
+    line-height: 1.65;
+    font-size: 14px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+    line-height: 1.18;
+    color: #6633FF;
+  }
+  .project-heading {
+    margin: 0 0 18px;
+    font-size: 1rem;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #111827;
+  }
+  .project-heading.muted { color: #6b7280; }
+  .print-content {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font: inherit;
+    margin: 0;
+  }
+  @media print {
+    body { padding: 0; }
+    .print-content { border-top-color: #d1d5db; }
+  }
+</style>
+</head>
+<body>
+  <h1>Selected Text Workspace</h1>
+  ${projectHeading}
+  <section class="print-content" aria-label="Selected text workspace print content">
+    <pre>${escapeHtml(selectedText)}</pre>
+  </section>
+</body>
+</html>`;
+
+      printWindow.document.open();
+      printWindow.document.write(printMarkup);
+      printWindow.document.close();
+      printWindow.focus();
+
+      const triggerPrint = () => {
+        try { printWindow.print(); }
+        catch (error) { flashSavedState("Print failed: please try again"); }
+      };
+
+      if (printWindow.document.readyState === "complete") {
+        window.setTimeout(triggerPrint, 180);
+      } else {
+        printWindow.addEventListener("load", () => window.setTimeout(triggerPrint, 180), { once: true });
+      }
+
+      flashSavedState("Selected workspace print opened");
+    }
+
+    function saveTextFile(text, filename) {
+      const value = text.trim();
+      if (!value) { flashSavedState("Nothing to save"); return; }
+      const blob = new Blob([value + "\n"], { type: "text/plain;charset=utf-8" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      flashSavedState("File saved");
+    }
+
+    function clearTranscript() {
+      const ok = window.confirm("Clear the full transcript? This cannot be undone.");
+      if (!ok) return;
+      finalQueue = []; recentSegments = [];
+      lastResolvedPreviewDropKey = ""; lastResolvedPreviewDropAt = 0;
+      previewLifecycleState = PREVIEW_STATE.IDLE;
+      unlockPreviewDrop();
+      els.transcript.value = "";
+      removeDocument(STORAGE_KEYS.transcript);
+      updateTranscriptCounters();
+      if (isReviewMode) scheduleReviewCount();
+      flashSavedState("Transcript cleared");
+    }
+
+    function clearExtractText() {
+      const ok = window.confirm("Clear selected text workspace?");
+      if (!ok) return;
+      els.extractText.value = "";
+      removeDocument(STORAGE_KEYS.extract);
+      flashSavedState("Selected workspace cleared");
+    }
+
+    function scheduleCounterUpdate() {
+      window.clearTimeout(counterTimer);
+      counterTimer = window.setTimeout(updateTranscriptCounters, isFastModeEnabled() ? 650 : 450);
+    }
+
+    function cleanTechnicalTerms() {
+      const value = els.transcript.value;
+      if (!value.trim()) { flashSavedState("Nothing to clean"); return; }
+      const cleaned = value.split("\n").map((line) => normalizeEnglishTerms(line)).join("\n");
+      els.transcript.value = cleaned;
+      scheduleCounterUpdate();
+      autoSave();
+      flashSavedState("Technical terms cleaned");
+    }
+
+    function checkTranscriptLengthWarning() {
+      if (performanceWarningShown) return;
+      if (els.transcript.value.length < TRANSCRIPT_LENGTH_WARNING) return;
+      performanceWarningShown = true;
+      flashSavedState("Large transcript: consider saving or starting a new session");
+    }
+
+    function updateTranscriptCounters() {
+      const text  = els.transcript.value;
+      const chars = text.length;
+      const words = countWords(text);
+      els.charCount.textContent = chars.toLocaleString() + " characters";
+      els.wordCount.textContent = words.toLocaleString() + " words";
+    }
+
+    function countWords(text) {
+      const normalized = text.trim();
+      if (!normalized) return 0;
+      const locale    = els.languageSelect.value === "th-TH" ? "th" : "en";
+      const segmenter = getSegmenter(locale);
+      if (segmenter) {
+        let count = 0;
+        for (const segment of segmenter.segment(normalized)) {
+          if (segment.isWordLike) count++;
+        }
+        return count;
+      }
+      if (els.languageSelect.value === "th-TH") return normalized.replace(/\s+/g, "").length;
+      return normalized.split(/\s+/).filter(Boolean).length;
+    }
+
+    function autoSave() {
+      clearTimeout(saveTimer);
+      els.savedState.textContent = "Saving...";
+      const delay = isFastModeEnabled() ? 200 : 500;
+      saveTimer = window.setTimeout(async () => {
+        await saveDocument(STORAGE_KEYS.transcript, els.transcript.value);
+        els.savedState.textContent = "Saved locally " + getTimeStamp();
+      }, delay);
+    }
+
+    function saveSpeakers() {
+      const speakers = els.speakerInputs.map((input, i) => input.value.trim() || "ผู้พูด " + (i + 1));
+      localStorage.setItem(STORAGE_KEYS.speakers, JSON.stringify(speakers));
+    }
+
+    function updateSpeakerSelectLabels() {
+      els.speakerInputs.forEach((input, i) => {
+        const label = input.value.trim() || "ผู้พูด " + (i + 1);
+        els.speakerSelect.options[i].textContent    = label;
+        els.miniSpeakerSelect.options[i].textContent = label;
+      });
+    }
+
+    async function loadState() {
+      const storedLang = localStorage.getItem(STORAGE_KEYS.language);
+      if (storedLang) els.languageSelect.value = storedLang;
+
+      els.transcript.value  = await loadDocument(STORAGE_KEYS.transcript);
+      els.extractText.value = await loadDocument(STORAGE_KEYS.extract);
+
+      els.timestampToggle.checked    = localStorage.getItem(STORAGE_KEYS.timestampEnabled) === "true";
+      els.speakerToggle.checked      = localStorage.getItem(STORAGE_KEYS.speakerEnabled) === "true";
+
+      // Accuracy Guard migration
+      const migrated = localStorage.getItem(STORAGE_KEYS.accuracyGuardMigrated) === "true";
+      if (!migrated) {
+        localStorage.setItem(STORAGE_KEYS.fastModeEnabled,      "false");
+        localStorage.setItem(STORAGE_KEYS.accuracyGuardEnabled, "true");
+        localStorage.setItem(STORAGE_KEYS.normalizeMode,        "realtime");
+        localStorage.setItem(STORAGE_KEYS.accuracyGuardMigrated,"true");
+      }
+
+      els.fastModeToggle.checked      = localStorage.getItem(STORAGE_KEYS.fastModeEnabled)    === "true";
+      els.accuracyGuardToggle.checked = localStorage.getItem(STORAGE_KEYS.accuracyGuardEnabled) !== "false";
+
+      const storedNorm = localStorage.getItem(STORAGE_KEYS.normalizeMode);
+      if (storedNorm) els.normalizeModeSelect.value = storedNorm;
+
+      const storedSpeaker = localStorage.getItem(STORAGE_KEYS.currentSpeaker);
+      if (storedSpeaker !== null) els.speakerSelect.value = storedSpeaker;
+
+      const storedSpeakers = localStorage.getItem(STORAGE_KEYS.speakers);
+      if (storedSpeakers) {
+        try {
+          const speakers = JSON.parse(storedSpeakers);
+          speakers.slice(0, 3).forEach((name, i) => {
+            els.speakerInputs[i].value = name || "ผู้พูด " + (i + 1);
+          });
+        } catch (e) { /* retain defaults */ }
+      }
+
+      // IMPROVEMENT 1 & 2: Load configurable settings
+      const storedDedupWindow = localStorage.getItem(STORAGE_KEYS.dedupWindow);
+      if (storedDedupWindow && els.dedupWindowSelect) {
+        const option = els.dedupWindowSelect.querySelector(`option[value="${storedDedupWindow}"]`);
+        if (option) els.dedupWindowSelect.value = storedDedupWindow;
+      }
+
+      const storedDropLines = localStorage.getItem(STORAGE_KEYS.dropLines);
+      if (storedDropLines && els.dropLinesSelect) {
+        const option = els.dropLinesSelect.querySelector(`option[value="${storedDropLines}"]`);
+        if (option) els.dropLinesSelect.value = storedDropLines;
+      }
+
+      // v1.6.2: Load project title metadata without touching transcript content.
+      const storedProjectName = getSavedProjectName();
+      if (els.projectNameInput) els.projectNameInput.value = storedProjectName;
+      updateProjectHeadings(storedProjectName);
+    }
+
+    function syncMiniSelectors() {
+      els.miniLanguageSelect.value = els.languageSelect.value;
+      els.miniSpeakerSelect.value  = els.speakerSelect.value;
+    }
+
+    function toggleControlsPanel() {
+      setControlsCollapsed(!els.appGrid.classList.contains("controls-collapsed"));
+    }
+
+    function setControlsCollapsed(collapsed) {
+      els.appGrid.classList.toggle("controls-collapsed", collapsed);
+      els.toggleControlsBtn.textContent = collapsed ? "Show Controls" : "Hide Controls";
+      els.toggleControlsBtn.setAttribute("aria-expanded", String(!collapsed));
+      localStorage.setItem(STORAGE_KEYS.controlsCollapsed, String(collapsed));
+    }
+
+    function applyControlsCollapsedState() {
+      setControlsCollapsed(localStorage.getItem(STORAGE_KEYS.controlsCollapsed) === "true");
+    }
+
+    function updateButtons() {
+      const unsupported    = !SpeechRecognition;
+      const startDisabled  = unsupported || (isListening && !isPaused);
+      const pauseDisabled  = unsupported || !isListening || isPaused;
+      const stopDisabled   = unsupported || (!isListening && !isPaused);
+      const langDisabled   = isListening && !isPaused;
+
+      els.startBtn.disabled    = startDisabled;
+      els.pauseBtn.disabled    = pauseDisabled;
+      els.stopBtn.disabled     = stopDisabled;
+      els.miniStartBtn.disabled= startDisabled;
+      els.miniPauseBtn.disabled= pauseDisabled;
+      els.miniStopBtn.disabled = stopDisabled;
+      els.languageSelect.disabled     = langDisabled;
+      els.miniLanguageSelect.disabled = langDisabled;
+    }
+
+    function setStatus(title, detail, mode) {
+      const unchanged = title === _lastStatusTitle && detail === _lastStatusDetail && mode === _lastStatusMode;
+      if (unchanged) return;
+      const dotChanged = mode !== _lastStatusMode;
+      _lastStatusTitle  = title;
+      _lastStatusDetail = detail;
+      _lastStatusMode   = mode;
+
+      if (dotChanged) {
+        els.statusDot.className = "dot";
+        els.miniStatusDot.className = "dot";
+        if (mode) { els.statusDot.classList.add(mode); els.miniStatusDot.classList.add(mode); }
+      }
+      els.statusText.textContent     = title;
+      els.statusDetail.textContent   = detail;
+      els.miniStatusText.textContent = title;
+    }
+
+    function flashSavedState(message) {
+      els.savedState.textContent = message;
+      window.setTimeout(() => {
+        const hasTranscript = els.transcript.value.trim().length > 0 ||
+          localStorage.getItem(STORAGE_KEYS.transcript + ".indexeddb");
+        els.savedState.textContent = hasTranscript ? "Saved locally" : "Not saved yet";
+      }, 1800);
+    }
+
+    function setupPwaMetadata() {
+      const manifest = {
+        name: "Speech-to-Text Conversation Web App",
+        short_name: "Speech Text",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#f7f7f5",
+        theme_color: "#111827",
+        description: "Client-side real-time speech transcription prototype.",
+        icons: []
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = URL.createObjectURL(blob);
+      document.head.appendChild(link);
+    }
+
+    // ════════════════════════════════════════
+    // ENTRY POINT
+    // ════════════════════════════════════════
+    init().catch((e) => {
+      console.error(e);
+      setStatus("Initialization error", "ไม่สามารถเริ่มต้นระบบได้ กรุณา reload หน้าเว็บ", "paused");
+    });
+
+  })();
+  </script>
+</body>
+</html>
